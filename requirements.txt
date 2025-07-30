@@ -6,66 +6,69 @@ streamlit-option-menu==0.3.6
 requests==2.31.0
 httpx==0.25.0
 
-# Data Processing and Analysis (numpy updated for pandas compatibility)
-pandas==2.1.3
-numpy==1.26.4
+# Data Processing and Analysis
+# Pandas and numpy must be left unpinned (or very loosely pinned) for Python 3.13,
+# as older pins will force a failing build. Latest versions at time of writing have 3.13 wheels.
+pandas
+numpy
 
 # Data Visualization
-plotly==5.17.0
-matplotlib==3.8.1
-seaborn==0.12.2
-altair==5.1.2
+plotly                   # Remove strict pin, let pip pick latest 3.13 wheel
+matplotlib
+seaborn
+altair
 
 # Image Processing and Media
-Pillow==10.1.0
-opencv-python==4.8.1.78
+Pillow                   # Leave unpinned; strict pins break on 3.13
+opencv-python
 
 # Environment and Configuration Management
-python-dotenv==1.0.0
-pydantic==2.7.4
-pydantic-settings==2.1.0
+python-dotenv
+pydantic>=2.7.4          # Required for compatibility with latest langchain
+pydantic-settings        # Should pick a compatible version automatically
 
-# Caching and Performance (Removed streamlit-cache since it's not a real package)
-diskcache==5.6.3
+# Caching and Performance
+diskcache                # Leave as is, available for 3.13
+# streamlit-cache -- REMOVE (does not exist)
 
 # Date and Time Processing
-python-dateutil==2.8.2
-pytz==2023.3
+python-dateutil
+pytz
 
 # Text Processing and Utilities
-beautifulsoup4==4.12.2
-markdown==3.5.1
+beautifulsoup4
+markdown
 
 # Progress Bars and UI Enhancements
-stqdm==0.0.5
-streamlit-lottie==0.0.5
-streamlit-card==0.0.61
+stqdm
+streamlit-lottie
+streamlit-card
 
 # Session State Management
-# Removed streamlit-session-state (no such package). Use built-in st.session_state.
+# streamlit-session-state -- REMOVE, use built-in st.session_state
 
 # Logging and Monitoring
-loguru==0.7.2
+loguru
 
 # AI & LangChain Integration with Groq
-langchain==0.3.27
-langchain-groq==0.3.6
-groq==0.30.0
+langchain>=0.3.27        # Modern version, supports pydantic>=2.7.4
+langchain-groq
+groq
 
 # Testing (Optional, for development)
-pytest==7.4.3
-# Removed pytest-streamlit (no such package)
+pytest
+# pytest-streamlit -- REMOVE (does not exist)
 
 # Code Quality (Optional, for development)
-black==23.11.0
-flake8==6.1.0
-isort==5.12.0
+black
+flake8
+isort
 
 # Type Checking (Optional)
-mypy==1.7.1
-types-requests==2.31.0.10
+mypy
+types-requests
 
 # Additional Utilities
-click==8.1.7
-tqdm==4.66.1
-urllib3==2.1.0
+click
+tqdm
+urllib3
