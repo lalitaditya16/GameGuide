@@ -18,43 +18,45 @@ import streamlit as st
 load_dotenv()
 
 class AppConfig(BaseSettings):
-    """Application configuration using Pydantic BaseSettings."""
+    """Application configuration using Pydantic BaseSettings and Streamlit secrets support."""
 
-    # RAWG API Configuration
-    rawg_api_key: str = Field(default_factory=lambda: st.secrets('RAWG_API_KEY', ''))
-    rawg_base_url: str = "https://api.rawg.io/api"
+    # RAWG API configuration
+    rawg_api_key: str = Field(default_factory=lambda: st.secrets.get("RAWG_API_KEY", ""))
+    base_url: str = "https://api.rawg.io/api"  # renamed from rawg_base_url
     user_agent: str = "RAWG-Streamlit-Explorer/1.0"
 
-    # Groq API Configuration (replacing OpenAI)
-    groq_api_key: str = Field(default_factory=lambda: st.secrets('GROQ_API_KEY', ''))
+    # Groq API configuration
+    groq_api_key: str = Field(default_factory=lambda: st.secrets.get("GROQ_API_KEY", ""))
     groq_model: str = "gemma2-9b-it"
     groq_temperature: float = 0.1
     groq_max_tokens: int = 1024
 
-    # API Rate Limiting
+    # API request settings
     api_timeout: int = 30
     max_retries: int = 3
     retry_delay: float = 1.0
 
-    # Pagination Settings
+    # Pagination
     default_page_size: int = 20
     max_page_size: int = 40
 
-    # Caching Configuration
-    cache_ttl: int = 3600  # 1 hour in seconds
+    # Streamlit cache settings
+    cache_ttl: int = 3600  # 1 hour
     max_cache_size: int = 100
     enable_caching: bool = True
 
-    # UI Configuration
+    # UI settings
     items_per_row: int = 3
     image_width: int = 300
     image_height: int = 200
 
     class Config:
         env_file = ".env"
+        env_file_encoding = "utf-8"
         case_sensitive = False
 
-# Initialize configuration
+
+# Instantiate configuration
 config = AppConfig()
 
 # RAWG API Endpoints
