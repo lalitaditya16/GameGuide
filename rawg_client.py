@@ -168,7 +168,7 @@ class RAWGClient:
         return _self._make_request(API_ENDPOINTS['games'], kwargs)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_game_details(self, game_id: Union[int, str]) -> Dict[str, Any]:
+    def get_game_details(_self, game_id: Union[int, str]) -> Dict[str, Any]:
         """
         Get detailed information about a specific game.
 
@@ -179,10 +179,10 @@ class RAWGClient:
             dict: Game details
         """
         endpoint = API_ENDPOINTS['game_detail'].format(id=game_id)
-        return self._make_request(endpoint)
+        return _self._make_request(endpoint)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_game_screenshots(self, game_id: Union[int, str]) -> Dict[str, Any]:
+    def get_game_screenshots(_self, game_id: Union[int, str]) -> Dict[str, Any]:
         """
         Get screenshots for a specific game.
 
@@ -193,10 +193,10 @@ class RAWGClient:
             dict: Game screenshots
         """
         endpoint = API_ENDPOINTS['game_screenshots'].format(id=game_id)
-        return self._make_request(endpoint)
+        return _self._make_request(endpoint)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_game_movies(self, game_id: Union[int, str]) -> Dict[str, Any]:
+    def get_game_movies(_self, game_id: Union[int, str]) -> Dict[str, Any]:
         """
         Get trailers/movies for a specific game.
 
@@ -207,10 +207,10 @@ class RAWGClient:
             dict: Game movies/trailers
         """
         endpoint = API_ENDPOINTS['game_movies'].format(id=game_id)
-        return self._make_request(endpoint)
+        return _self._make_request(endpoint)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_game_achievements(self, game_id: Union[int, str]) -> Dict[str, Any]:
+    def get_game_achievements(_self, game_id: Union[int, str]) -> Dict[str, Any]:
         """
         Get achievements for a specific game.
 
@@ -221,10 +221,10 @@ class RAWGClient:
             dict: Game achievements
         """
         endpoint = API_ENDPOINTS['game_achievements'].format(id=game_id)
-        return self._make_request(endpoint)
+        return _self._make_request(endpoint)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_game_stores(self, game_id: Union[int, str]) -> Dict[str, Any]:
+    def get_game_stores(_self, game_id: Union[int, str]) -> Dict[str, Any]:
         """
         Get store links for a specific game.
 
@@ -235,10 +235,10 @@ class RAWGClient:
             dict: Game store links
         """
         endpoint = API_ENDPOINTS['game_stores'].format(id=game_id)
-        return self._make_request(endpoint)
+        return _self._make_request(endpoint)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_game_series(self, game_id: Union[int, str]) -> Dict[str, Any]:
+    def get_game_series(_self, game_id: Union[int, str]) -> Dict[str, Any]:
         """
         Get games in the same series.
 
@@ -249,10 +249,10 @@ class RAWGClient:
             dict: Games in series
         """
         endpoint = API_ENDPOINTS['game_series'].format(id=game_id)
-        return self._make_request(endpoint)
+        return _self._make_request(endpoint)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_developers(self, **kwargs) -> Dict[str, Any]:
+    def get_developers(_self, **kwargs) -> Dict[str, Any]:
         """
         Get a list of game developers.
 
@@ -262,7 +262,7 @@ class RAWGClient:
         Returns:
             dict: Developers data
         """
-        return self._make_request(API_ENDPOINTS['developers'], kwargs)
+        return _self._make_request(API_ENDPOINTS['developers'], kwargs)
 
     @st.cache_data(ttl=config.cache_ttl)
     def get_developer_details(self, developer_id: Union[int, str]) -> Dict[str, Any]:
@@ -279,7 +279,7 @@ class RAWGClient:
         return self._make_request(endpoint)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_publishers(self, **kwargs) -> Dict[str, Any]:
+    def get_publishers(_self, **kwargs) -> Dict[str, Any]:
         """
         Get a list of game publishers.
 
@@ -289,10 +289,10 @@ class RAWGClient:
         Returns:
             dict: Publishers data
         """
-        return self._make_request(API_ENDPOINTS['publishers'], kwargs)
+        return _self._make_request(API_ENDPOINTS['publishers'], kwargs)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_publisher_details(self, publisher_id: Union[int, str]) -> Dict[str, Any]:
+    def get_publisher_details(_self, publisher_id: Union[int, str]) -> Dict[str, Any]:
         """
         Get detailed information about a specific publisher.
 
@@ -303,10 +303,10 @@ class RAWGClient:
             dict: Publisher details
         """
         endpoint = API_ENDPOINTS['publisher_detail'].format(id=publisher_id)
-        return self._make_request(endpoint)
+        return _self._make_request(endpoint)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_platforms(self, **kwargs) -> Dict[str, Any]:
+    def get_platforms(_self, **kwargs) -> Dict[str, Any]:
         """
         Get a list of gaming platforms.
 
@@ -316,10 +316,10 @@ class RAWGClient:
         Returns:
             dict: Platforms data
         """
-        return self._make_request(API_ENDPOINTS['platforms'], kwargs)
+        return _self._make_request(API_ENDPOINTS['platforms'], kwargs)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_platform_details(self, platform_id: Union[int, str]) -> Dict[str, Any]:
+    def get_platform_details(_self, platform_id: Union[int, str]) -> Dict[str, Any]:
         """
         Get detailed information about a specific platform.
 
@@ -330,10 +330,10 @@ class RAWGClient:
             dict: Platform details
         """
         endpoint = API_ENDPOINTS['platform_detail'].format(id=platform_id)
-        return self._make_request(endpoint)
+        return _self._make_request(endpoint)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_genres(self, **kwargs) -> Dict[str, Any]:
+    def get_genres(_self, **kwargs) -> Dict[str, Any]:
         """
         Get a list of game genres.
 
@@ -343,10 +343,10 @@ class RAWGClient:
         Returns:
             dict: Genres data
         """
-        return self._make_request(API_ENDPOINTS['genres'], kwargs)
+        return _self._make_request(API_ENDPOINTS['genres'], kwargs)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_genre_details(self, genre_id: Union[int, str]) -> Dict[str, Any]:
+    def get_genre_details(_self, genre_id: Union[int, str]) -> Dict[str, Any]:
         """
         Get detailed information about a specific genre.
 
@@ -357,10 +357,10 @@ class RAWGClient:
             dict: Genre details
         """
         endpoint = API_ENDPOINTS['genre_detail'].format(id=genre_id)
-        return self._make_request(endpoint)
+        return _self._make_request(endpoint)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_tags(self, **kwargs) -> Dict[str, Any]:
+    def get_tags(_self, **kwargs) -> Dict[str, Any]:
         """
         Get a list of game tags.
 
@@ -370,10 +370,10 @@ class RAWGClient:
         Returns:
             dict: Tags data
         """
-        return self._make_request(API_ENDPOINTS['tags'], kwargs)
+        return _self._make_request(API_ENDPOINTS['tags'], kwargs)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_creators(self, **kwargs) -> Dict[str, Any]:
+    def get_creators(_self, **kwargs) -> Dict[str, Any]:
         """
         Get a list of game creators.
 
@@ -383,10 +383,10 @@ class RAWGClient:
         Returns:
             dict: Creators data
         """
-        return self._make_request(API_ENDPOINTS['creators'], kwargs)
+        return _self._make_request(API_ENDPOINTS['creators'], kwargs)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_creator_details(self, creator_id: Union[int, str]) -> Dict[str, Any]:
+    def get_creator_details(_self, creator_id: Union[int, str]) -> Dict[str, Any]:
         """
         Get detailed information about a specific creator.
 
@@ -397,10 +397,10 @@ class RAWGClient:
             dict: Creator details
         """
         endpoint = API_ENDPOINTS['creator_detail'].format(id=creator_id)
-        return self._make_request(endpoint)
+        return _self._make_request(endpoint)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_creator_roles(self, **kwargs) -> Dict[str, Any]:
+    def get_creator_roles(_self, **kwargs) -> Dict[str, Any]:
         """
         Get a list of creator roles/positions.
 
@@ -410,10 +410,10 @@ class RAWGClient:
         Returns:
             dict: Creator roles data
         """
-        return self._make_request(API_ENDPOINTS['creator_roles'], kwargs)
+        return _self._make_request(API_ENDPOINTS['creator_roles'], kwargs)
 
     @st.cache_data(ttl=config.cache_ttl)
-    def get_stores(self, **kwargs) -> Dict[str, Any]:
+    def get_stores(_self, **kwargs) -> Dict[str, Any]:
         """
         Get a list of game stores.
 
@@ -423,9 +423,9 @@ class RAWGClient:
         Returns:
             dict: Stores data
         """
-        return self._make_request(API_ENDPOINTS['stores'], kwargs)
+        return _self._make_request(API_ENDPOINTS['stores'], kwargs)
 
-    def search_games(self, query: str, **kwargs) -> Dict[str, Any]:
+    def search_games(_self, query: str, **kwargs) -> Dict[str, Any]:
         """
         Search for games by name.
 
@@ -437,9 +437,9 @@ class RAWGClient:
             dict: Search results
         """
         params = {'search': query, **kwargs}
-        return self.get_games(**params)
+        return _self.get_games(**params)
 
-    def get_popular_games(self, time_period: str = "week", **kwargs) -> Dict[str, Any]:
+    def get_popular_games(_self, time_period: str = "week", **kwargs) -> Dict[str, Any]:
         """
         Get popular games for a specific time period.
 
@@ -467,9 +467,9 @@ class RAWGClient:
             'ordering': '-rating',
             **kwargs
         }
-        return self.get_games(**params)
+        return _self.get_games(**params)
 
-    def get_trending_games(self, **kwargs) -> Dict[str, Any]:
+    def get_trending_games(_self, **kwargs) -> Dict[str, Any]:
         """
         Get currently trending games.
 
@@ -484,7 +484,7 @@ class RAWGClient:
             'page_size': kwargs.get('page_size', 20),
             **kwargs
         }
-        return self.get_games(**params)
+        return _self.get_games(**params)
 
     def close(self):
         """Close the HTTP session."""
