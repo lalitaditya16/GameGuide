@@ -143,7 +143,7 @@ class RAWGClient:
             raise RAWGAPIError(f"Request failed: {str(e)}")
 
     @st.cache_data(ttl=config.cache_ttl, max_entries=config.max_cache_size)
-    def get_games(self, **kwargs) -> Dict[str, Any]:
+    def get_games(_self, **kwargs) -> Dict[str, Any]:
         """
         Get a list of games.
 
