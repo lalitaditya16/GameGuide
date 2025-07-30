@@ -165,7 +165,7 @@ class RAWGClient:
         Returns:
             dict: Games data
         """
-        return self._make_request(API_ENDPOINTS['games'], kwargs)
+        return _self._make_request(API_ENDPOINTS['games'], kwargs)
 
     @st.cache_data(ttl=config.cache_ttl)
     def get_game_details(self, game_id: Union[int, str]) -> Dict[str, Any]:
