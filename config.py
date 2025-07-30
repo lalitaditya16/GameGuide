@@ -12,6 +12,7 @@ from typing import Dict, List, Any
 from pydantic_settings import BaseSettings
 from pydantic import Field
 from dotenv import load_dotenv
+import streamlit as st
 
 # Load environment variables
 load_dotenv()
@@ -20,12 +21,12 @@ class AppConfig(BaseSettings):
     """Application configuration using Pydantic BaseSettings."""
 
     # RAWG API Configuration
-    rawg_api_key: str = Field(default_factory=lambda: os.getenv('RAWG_API_KEY', ''))
+    rawg_api_key: str = Field(default_factory=lambda: st.secrets('RAWG_API_KEY', ''))
     rawg_base_url: str = "https://api.rawg.io/api"
     user_agent: str = "RAWG-Streamlit-Explorer/1.0"
 
     # Groq API Configuration (replacing OpenAI)
-    groq_api_key: str = Field(default_factory=lambda: os.getenv('GROQ_API_KEY', ''))
+    groq_api_key: str = Field(default_factory=lambda: st.secrets('GROQ_API_KEY', ''))
     groq_model: str = "gemma2-9b-it"
     groq_temperature: float = 0.1
     groq_max_tokens: int = 1024
