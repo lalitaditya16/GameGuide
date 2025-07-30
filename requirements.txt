@@ -8,7 +8,7 @@ httpx==0.25.0
 
 # Data Processing and Analysis
 pandas==2.1.3
-numpy==1.24.3
+numpy==1.26.4
 
 # Data Visualization
 plotly==5.17.0
