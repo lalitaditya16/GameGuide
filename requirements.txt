@@ -1,0 +1,72 @@
+# Core Streamlit and Web Framework
+streamlit==1.28.1
+streamlit-option-menu==0.3.6
+
+# HTTP Requests and API Integration
+requests==2.31.0
+httpx==0.25.0
+
+# Data Processing and Analysis
+pandas==2.1.3
+numpy==1.24.3
+
+# Data Visualization
+plotly==5.17.0
+matplotlib==3.8.1
+seaborn==0.12.2
+altair==5.1.2
+
+# Image Processing and Media
+Pillow==10.1.0
+opencv-python==4.8.1.78
+
+# Environment and Configuration Management
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Caching and Performance
+streamlit-cache==0.4.0
+diskcache==5.6.3
+
+# Date and Time Processing
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Text Processing and Utilities
+beautifulsoup4==4.12.2
+markdown==3.5.1
+
+# Progress Bars and UI Enhancements
+stqdm==0.0.5
+streamlit-lottie==0.0.5
+streamlit-card==0.0.61
+
+# Session State Management
+streamlit-session-state==0.4.2
+
+# Logging and Monitoring
+loguru==0.7.2
+
+# AI & LangChain Integration with Groq
+langchain==0.2.0
+langchain-groq==0.2.0
+groq==0.9.0
+
+# Testing (Optional, for development)
+pytest==7.4.3
+pytest-streamlit==1.0.0
+
+# Code Quality (Optional, for development)
+black==23.11.0
+flake8==6.1.0
+isort==5.12.0
+
+# Type Checking (Optional)
+mypy==1.7.1
+types-requests==2.31.0.10
+
+# Additional Utilities
+click==8.1.7
+tqdm==4.66.1
+urllib3==2.1.0
