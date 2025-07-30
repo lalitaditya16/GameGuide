@@ -9,7 +9,8 @@ application parameters used throughout the application.
 
 import os
 from typing import Dict, List, Any
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings
+from pydantic import Field
 from dotenv import load_dotenv
 
 # Load environment variables
