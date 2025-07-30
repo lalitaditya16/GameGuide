@@ -41,8 +41,6 @@ stqdm
 streamlit-lottie
 streamlit-card
 
-# Session State Management
-streamlit-session-state
 
 # Logging and Monitoring
 loguru
