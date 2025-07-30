@@ -22,7 +22,7 @@ opencv-python==4.8.1.78
 
 # Environment and Configuration Management
 python-dotenv==1.0.0
-pydantic==2.5.0
+pydantic==2.7.4
 pydantic-settings==2.1.0
 
 # Caching and Performance (Removed streamlit-cache since it's not a real package)
