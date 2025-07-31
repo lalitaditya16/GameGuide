@@ -24,6 +24,7 @@ def load_filters():
     genres, platforms = {}, {}
     try:
         genres_resp = rawg.get_genres()
+        st.sidebar.write("Genres API Response:", genres_resp)
         if genres_resp and genres_resp.get('results'):
             genres = {g['name']: g['id'] for g in genres_resp['results']}
         else:
@@ -33,6 +34,7 @@ def load_filters():
 
     try:
         platforms_resp = rawg.get_platforms()
+        st.sidebar.write("Platforms API Response:", platforms_resp)
         if platforms_resp and platforms_resp.get('results'):
             platforms = {p['name']: p['id'] for p in platforms_resp['results']}
         else:
