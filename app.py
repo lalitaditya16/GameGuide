@@ -24,7 +24,7 @@ from helpers import init_session_state, load_custom_css, validate_environment, g
 
 # Load environment variables
 load_dotenv()
-
+today = datetime.now().strftime("%B %d, %Y")
 # Page configuration
 st.set_page_config(
     page_title="🎮 RAWG Gaming Database",
