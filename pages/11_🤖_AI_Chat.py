@@ -7,7 +7,7 @@ st.set_page_config(page_title="Browse Games", page_icon="🎮")
 
 st.title("🎮 Browse Games")
 st.markdown("Explore thousands of games from the RAWG database.")
-
+st.sidebar.write("RAWG API KEY DETECTED:", st.secrets.get("RAWG_API_KEY", None))
 def get_rawg_api_key() -> str:
     """Safely fetch RAWG API key from Streamlit secrets, warn if missing."""
     key = st.secrets.get("RAWG_API_KEY", "")
@@ -15,6 +15,7 @@ def get_rawg_api_key() -> str:
         st.error("RAWG API key not found. Please set it up in Streamlit Cloud (Manage App ▶️ Secrets) or locally in `.streamlit/secrets.toml`.")
         st.stop()
     return key
+
 
 @st.cache_resource(ttl=3600)
 def get_rawg_client() -> RAWGClient:
