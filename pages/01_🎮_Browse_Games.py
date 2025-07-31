@@ -14,7 +14,7 @@ st.markdown("Explore thousands of games from the RAWG database.")
 
 @st.cache_resource(ttl=config.cache_ttl)
 def get_rawg_client() -> RAWGClient:
-    return RAWGClient(api_key = os.getenv('RAWG_API_KEY'), base_url=config.base_url)
+    return RAWGClient(api_key = st.secrets('RAWG_API_KEY'), base_url=config.base_url)
 
 
 def load_filters():
