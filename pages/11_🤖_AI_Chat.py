@@ -7,7 +7,7 @@ st.set_page_config(page_title="Browse Games", page_icon="🎮")
 
 st.title("🎮 Browse Games")
 st.markdown("Explore thousands of games from the RAWG database.")
-st.sidebar.write("RAWG API KEY DETECTED:", st.secrets.get("RAWG_API_KEY", None))
+
 def get_rawg_api_key() -> str:
     """Safely fetch RAWG API key from Streamlit secrets, warn if missing."""
     key = st.secrets.get("RAWG_API_KEY", "")
