@@ -1,5 +1,5 @@
 import streamlit as st
-from client.rawg_client import RAWGClient
+from client.rawg_client import rawg_client
 from config import config
 
 st.set_page_config(page_title="Browse Games", layout="wide")
