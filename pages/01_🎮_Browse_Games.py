@@ -1,5 +1,5 @@
 import streamlit as st
-from client.rawg_client import RAWGClient
+from rawg_client import RAWGClient
 import config
 
 def main():
