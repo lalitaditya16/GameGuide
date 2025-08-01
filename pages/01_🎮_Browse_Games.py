@@ -10,7 +10,7 @@ st.set_page_config(page_title="Browse Games", page_icon="🎮")
 st.title("🎮 Browse Games")
 st.markdown("Explore thousands of games from the RAWG database.")
 st.sidebar.write("RAWG API KEY DETECTED:", st.secrets.get("RAWG_API_KEY", None))
-# @st.cache_resource(ttl=config.cache_ttl)
+
 def get_rawg_client() -> RAWGClient:
     api_key = st.secrets.get("RAWG_API_KEY", "")
     if not api_key:
@@ -19,7 +19,6 @@ def get_rawg_client() -> RAWGClient:
     return RAWGClient(api_key)
 
 def load_filters():
-    """Load filter options (genres, platforms) for sidebar, with error handling."""
     rawg = get_rawg_client()
     genres, platforms = {}, {}
     try:
@@ -52,7 +51,6 @@ def main():
 
     search_query = st.sidebar.text_input("Search by name")
 
-    # Only enable widgets if there are options to select
     if genres:
         selected_genres = st.sidebar.multiselect("Genres", options=list(genres.keys()))
     else:
@@ -67,12 +65,9 @@ def main():
         "Order by",
         options=[
             "Relevance", 
-            "Name (A-Z)",
-            "Name (Z-A)", 
-            "Release date (newest)", 
-            "Release date (oldest)",
-            "Rating (highest)", 
-            "Rating (lowest)"
+            "Name (A-Z)", "Name (Z-A)", 
+            "Release date (newest)", "Release date (oldest)",
+            "Rating (highest)", "Rating (lowest)"
         ],
         index=0
     )
@@ -88,7 +83,6 @@ def main():
     }
     ordering_param = ordering_map.get(ordering, "")
 
-    # Pagination state
     if 'page' not in st.session_state:
         st.session_state.page = 1
 
@@ -96,41 +90,45 @@ def main():
         st.session_state.page = 1
         st.experimental_rerun()
 
-    # Compose API parameters
+    # --- Debugging: Build and show parameters ---
     params = {
         "page": st.session_state.page,
         "page_size": config.default_page_size,
     }
+
     if search_query:
         params["search"] = search_query
-
     if selected_genres:
         genre_ids = ",".join(str(genres[g]) for g in selected_genres)
         params["genres"] = genre_ids
-
     if selected_platforms:
         platform_ids = ",".join(str(platforms[p]) for p in selected_platforms)
         params["platforms"] = platform_ids
-
     if ordering_param:
         params["ordering"] = ordering_param
 
-    # Fetch games data
+    st.sidebar.subheader("Query Parameters")
+    st.sidebar.code(params, language="json")
+
     with st.spinner("Loading games..."):
         try:
             games_data = rawg.get_games(**params)
+            st.sidebar.subheader("RAWG Response")
+            st.sidebar.code(games_data, language="json")
         except Exception as e:
             st.error(f"Error loading games: {e}")
             return
 
     games = games_data.get("results", [])
-
-    # Display results count and current page
     total_results = games_data.get("count", 0)
     st.write(f"Total games found: {total_results}")
     st.write(f"Page: {st.session_state.page}")
 
-    # Game Cards Display
+    if not games:
+        st.warning("No games found. Try a different search term or adjust filters.")
+        return
+
+    # Display Game Cards
     cols_per_row = config.items_per_row if hasattr(config, "items_per_row") else 3
     cols = st.columns(cols_per_row)
 
@@ -143,14 +141,14 @@ def main():
             genres_list = ", ".join([g["name"] for g in game.get("genres", [])][:2])
             background_img = game.get("background_image") or ""
             if background_img:
-                st.image(background_img, use_column_width=True, width=getattr(config, "image_width", 300), clamp=True)
+                st.image(background_img, use_column_width=True, clamp=True)
             st.markdown(f"### {name}")
             st.markdown(f"**Released:** {released}")
             st.markdown(f"**Rating:** {rating}/5")
             st.markdown(f"**Genres:** {genres_list}")
 
-    # Pagination buttons
-    col1, col2, col3 = st.columns([1,6,1])
+    # Pagination
+    col1, col2, col3 = st.columns([1, 6, 1])
     with col1:
         if st.button("⬅️ Previous") and st.session_state.page > 1:
             st.session_state.page -= 1
