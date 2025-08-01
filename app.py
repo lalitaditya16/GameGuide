@@ -1,8 +1,10 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import streamlit as st
 from streamlit_option_menu import option_menu
 import pandas as pd
 from datetime import datetime
-import os
 from dotenv import load_dotenv
 
 # ✅ Ensure this has no spaces/tabs before it
