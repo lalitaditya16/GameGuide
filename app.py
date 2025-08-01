@@ -1,16 +1,3 @@
-
-"""
-🎮 RAWG API Streamlit Web Application
-=====================================
-
-A comprehensive web application built with Streamlit that leverages the RAWG Video Games Database API
-to provide an interactive gaming database experience with AI-powered features using Groq.
-
-Author: RAWG Explorer Team
-Version: 2.0.0 (with Groq AI integration)
-License: MIT
-"""
-
 import streamlit as st
 from streamlit_option_menu import option_menu
 import pandas as pd
