@@ -9,12 +9,12 @@ from functools import wraps
 import streamlit as st
 from config import config, API_ENDPOINTS, ERROR_MESSAGES
 
-# ───────────────────────────── Set up logging ─────────────────────────────
+# ───────────────────────── Set up logging ─────────────────────────
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# ────────────────────────────── Exceptions ────────────────────────────────
+# ─────────────────── Exceptions ───────────────────
 class RAWGAPIError(Exception):
     """Custom exception for RAWG API errors."""
 
@@ -23,7 +23,8 @@ class RateLimitError(RAWGAPIError):
     """Exception raised when API rate limit is exceeded."""
 
 
-# ───────────────────── Retry decorator for resilience ─────────────────────
+# ──────── Retry decorator for resilience ────────
+
 def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
     def decorator(func):
         @wraps(func)
@@ -36,7 +37,7 @@ def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
                     last_exception = e
                     if attempt < max_retries - 1:
                         logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {delay}s...")
-                        time.sleep(delay * (2 ** attempt))  # exponential backoff
+                        time.sleep(delay * (2 ** attempt))
                     else:
                         logger.error(f"All {max_retries} attempts failed.")
             raise last_exception
@@ -44,7 +45,7 @@ def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
     return decorator
 
 
-# ───────────────────────────── RAWG API Client ─────────────────────────────
+# ───────────── RAWG API Client ─────────────
 class RAWGClient:
     def __init__(self, api_key: str, base_url: str = None, user_agent: str = None):
         self.api_key = api_key
@@ -92,7 +93,7 @@ class RAWGClient:
         except requests.exceptions.RequestException as e:
             raise RAWGAPIError(str(e))
 
-    # ────────── Cached Public Instance Methods (using `_self`) ────────── #
+    # ─── Cached Public Instance Methods (using `_self`) ─── #
 
     @st.cache_data(ttl=config.cache_ttl)
     def get_games(_self, **kwargs) -> Dict[str, Any]:
@@ -185,7 +186,7 @@ class RAWGClient:
     def get_stores(_self, **kwargs) -> Dict[str, Any]:
         return _self._make_request(API_ENDPOINTS["stores"], kwargs)
 
-    # ────────────── Utility methods (non-cached logic wrappers) ────────────── #
+    # ──────── Utility methods (non-cached logic wrappers) ──────── #
 
     def search_games(_self, query: str, **kwargs) -> Dict[str, Any]:
         params = {"search": query, **kwargs}
@@ -208,7 +209,7 @@ class RAWGClient:
     def get_trending_games(_self, **kwargs) -> Dict[str, Any]:
         return _self.get_games(ordering="-added", page_size=kwargs.get("page_size", 20), **kwargs)
 
-    # ───────────────────────────── Context management ───────────────────────────── #
+    # ──────────────── Context management ──────────────── #
 
     def close(self):
         if self.session:
