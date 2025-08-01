@@ -5,7 +5,7 @@ import config
 
 def main():
     st.title("🎮 Browse Games")
-    rawg = RAWGClient(st.secrets("RAWG_API_KEY"))
+    rawg = RAWGClient(st.secrets["RAWG_API_KEY"])
 
     # Sidebar Filters
     with st.sidebar:
