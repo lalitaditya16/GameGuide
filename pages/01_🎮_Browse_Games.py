@@ -17,42 +17,31 @@ def main():
         ordering = st.selectbox("Order by", ["", "name", "-released", "-rating", "-added"])
         page_size = st.slider("Number of results", 5, 40, 10)
 
-    # Create parameters dict
+    # Prepare parameters
     params = {
-        "search": search_query if search_query else None,
-        "genres": genres if genres else None,
-        "ordering": ordering if ordering else None,
+        "search": search_query,
         "page_size": page_size
     }
+    if genres:
+        params["genres"] = genres
+    if ordering:
+        params["ordering"] = ordering
 
-    # Filter out None values
-    params = {k: v for k, v in params.items() if v is not None}
+    # Search games
+    results = rawg.search_games(**params)
 
-    try:
-        results = rawg.search_games(**params)
-        if not results:
-            st.info("No games found.")
-            return
-
+    if results:
         for game in results:
-            with st.container():
-                st.subheader(game.get("name", "Unknown Title"))
-                if game.get("background_image"):
-                    st.image(game["background_image"], use_column_width=True)
-
-                released = game.get("released")
-                if released:
-                    released_date = datetime.strptime(released, "%Y-%m-%d").strftime("%b %d, %Y")
-                    st.markdown(f"**Released:** {released_date}")
-
-                rating = game.get("rating")
-                if rating:
-                    st.markdown(f"**Rating:** {rating} ⭐")
-
-                st.markdown("---")
-
-    except Exception as e:
-        st.error(f"Failed to fetch games: {e}")
+            st.subheader(game.get("name"))
+            st.write(f"Released: {game.get('released', 'N/A')}")
+            st.write(f"Rating: {game.get('rating', 'N/A')}")
+            st.write(f"Platforms: {', '.join([p['platform']['name'] for p in game.get('platforms', [])])}")
+            st.write(f"Publisher: {', '.join([pub.get('name') for pub in game.get('publishers', [])])}")
+            st.image(game.get("background_image", ""), width=600)
+            st.markdown("---")
+    else:
+        st.warning("No games found.")
 
 if __name__ == "__main__":
     main()
+
