@@ -1,36 +1,70 @@
 import streamlit as st
 from rawg_client import RAWGClient
-from config import config
+import config
 
-st.set_page_config(page_title="Browse Games", layout="wide")
 
-st.title("🎮 Browse Games")
-st.write("Explore thousands of games from the RAWG database.")
+def main():
+    st.title("🎮 Browse Games")
+    rawg = RAWGClient(config.api_key)
 
-client = RAWGClient(api_key=st.secrets["RAWG_API_KEY"])
+    # Sidebar Filters
+    with st.sidebar:
+        st.header("🔎 Filters")
+        genres_data = rawg.get_genres()
+        platforms_data = rawg.get_platforms()
 
-# --- Sidebar ---
-st.sidebar.header("🔍 Filter games")
+        genre_options = [g["name"] for g in genres_data["results"]] if genres_data else []
+        platform_options = [p["name"] for p in platforms_data["results"]] if platforms_data else []
 
-search_query = st.sidebar.text_input("Search by name", value="")
+        selected_genre = st.selectbox("Genre", ["Any"] + genre_options)
+        selected_platform = st.selectbox("Platform", ["Any"] + platform_options)
+        search_query = st.text_input("Search Games")
 
-# --- API Query Params ---
-query_params = {"search": search_query, "page_size": 20}
+    if search_query:
+        st.write(f"### Results for: {search_query}")
+        params = {"search": search_query, "page_size": 12}
 
-# --- API Call ---
-with st.spinner("Loading games..."):
-    response = client.get_games(**query_params)
-    games = response.get("results", [])
-    total = response.get("count", 0)
+        if selected_genre != "Any":
+            genre_id = next((g["id"] for g in genres_data["results"] if g["name"] == selected_genre), None)
+            if genre_id:
+                params["genres"] = genre_id
 
-# --- Display ---
-st.subheader(f"Total games found: {total}")
-if games:
-    for game in games:
-        st.markdown(f"### {game['name']}")
-        if game.get("background_image"):
-            st.image(game["background_image"], width=400)
-        st.write(f"Released: {game.get('released', 'N/A')}")
-        st.write("---")
-else:
-    st.warning("No games found. Try a different search term.")
+        if selected_platform != "Any":
+            platform_id = next((p["id"] for p in platforms_data["results"] if p["name"] == selected_platform), None)
+            if platform_id:
+                params["platforms"] = platform_id
+
+        results = rawg.search_games(**params)
+
+        if results and results.get("results"):
+            for game in results["results"]:
+                with st.container():
+                    st.subheader(game.get("name", "Unknown Game"))
+                    cols = st.columns([1, 3])
+
+                    with cols[0]:
+                        if game.get("background_image"):
+                            st.image(game["background_image"], width=150)
+
+                    with cols[1]:
+                        st.markdown(f"**Released:** {game.get('released', 'N/A')}")
+                        st.markdown(f"**Rating:** {game.get('rating', 'N/A')}")
+
+                        if game.get("platforms"):
+                            platforms = [p["platform"]["name"] for p in game["platforms"]]
+                            st.markdown(f"**Platforms:** {', '.join(platforms)}")
+
+                        if game.get("genres"):
+                            genres = [g["name"] for g in game["genres"]]
+                            st.markdown(f"**Genres:** {', '.join(genres)}")
+
+                        if game.get("publishers"):
+                            publishers = [p["name"] for p in game["publishers"]]
+                            st.markdown(f"**Publishers:** {', '.join(publishers)}")
+
+        else:
+            st.warning("No results found. Try refining your search or filters.")
+
+
+if __name__ == "__main__":
+    main()
