@@ -92,31 +92,42 @@ class RAWGClient:
             time.sleep(self.min_request_interval - elapsed)
 
     @retry_on_failure(max_retries=config.max_retries, delay=config.retry_delay)
-    def _make_request(self, endpoint: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
-        self._wait_for_rate_limit()
+    def _make_request(self, endpoint: str, params: dict = None):
+        url = f"{self.base_url}/{endpoint.lstrip('/')}"
+    
+    # Always include the API key in the request params
+        full_params = {"key": self.api_key}
+        if params:
+            full_params.update(params)
 
-        url = urljoin(self.base_url, endpoint)
-        params = params or {}
-        params["key"] = self.api_key
+    # Respect rate limits
+        elapsed = time.time() - self.last_request_time
+        if elapsed < self.min_request_interval:
+            time.sleep(self.min_request_interval - elapsed)
 
         try:
-            response = self.session.get(url, params=params, timeout=config.api_timeout)
+            response = self.session.get(url, params=full_params)
             self.last_request_time = time.time()
 
-            if response.status_code == 200:
-                return response.json()
-            elif response.status_code == 429:
-                raise RateLimitError("Rate limit exceeded")
-            elif response.status_code == 404:
-                return {}
-            else:
-                response.raise_for_status()
-        except requests.exceptions.Timeout:
-            raise RAWGAPIError("Request timed out")
-        except requests.exceptions.ConnectionError:
-            raise RAWGAPIError("Connection error")
+            logger.debug(f"Request URL: {response.url}")
+            logger.debug(f"Response Status: {response.status_code}")
+            logger.debug(f"Response Content: {response.text}")
+
+            if response.status_code != 200:
+                logger.warning(f"RAWG API error: {response.status_code} - {response.text}")
+                return {"results": []}
+
+            data = response.json()
+            if "results" not in data:
+                logger.warning("RAWG API returned unexpected format.")
+                return {"results": []}
+
+            return data
+
         except requests.exceptions.RequestException as e:
-            raise RAWGAPIError(str(e))
+            logger.error(f"RAWG API request failed: {e}")
+            return {"results": []}
+
 
     def _with_spinner(self, msg, fn, *args, **kwargs):
         with st.spinner(msg):
