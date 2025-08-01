@@ -47,7 +47,7 @@ def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
 # ───────────── RAWG API Client ─────────────
 class RAWGClient:
     def __init__(self, api_key: str, base_url: str = None, user_agent: str = None):
-        self.api_key = st.secrets("RAWG_API_KEY")
+        self.api_key = st.secrets["RAWG_API_KEY"]
         self.base_url = base_url or config.base_url
         self.user_agent = user_agent or "RAWGStreamlitApp/1.0"
         self.session = requests.Session()
