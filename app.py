@@ -5,9 +5,10 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 
-# Import custom modules
+# ✅ Ensure this has no spaces/tabs before it
 from client.rawg_client import RAWGClient
 from helpers import init_session_state, load_custom_css, validate_environment, get_chat_manager
+
 
 # Load environment variables
 load_dotenv()
