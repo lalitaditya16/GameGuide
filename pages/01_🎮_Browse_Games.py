@@ -10,7 +10,7 @@ st.set_page_config(page_title="Browse Games", page_icon="🎮")
 st.title("🎮 Browse Games")
 st.markdown("Explore thousands of games from the RAWG database.")
 st.sidebar.write("RAWG API KEY DETECTED:", st.secrets.get("RAWG_API_KEY", None))
-@st.cache_resource(ttl=config.cache_ttl)
+# @st.cache_resource(ttl=config.cache_ttl)
 def get_rawg_client() -> RAWGClient:
     # Ensure API key present for proper error handling
     if not config.rawg_api_key:
