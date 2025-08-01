@@ -47,25 +47,20 @@ def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
 # ───────────── RAWG API Client ─────────────
 class RAWGClient:
     def __init__(self, api_key: str = None, base_url: str = None, user_agent: str = None):
-        # Load API key from argument or Streamlit secrets
         self.api_key = api_key or st.secrets["RAWG_API_KEY"]
-
-        # Use default config values if not provided
         self.base_url = base_url or config.base_url
         self.user_agent = user_agent or "RAWGStreamlitApp/1.0"
 
-        # Prepare a session with default headers and parameters
         self.session = requests.Session()
         self.session.headers.update({
             "User-Agent": self.user_agent,
             "Accept": "application/json",
             "Content-Type": "application/json"
         })
-        self.session.params = {"key": self.api_key}  # ✅ Always include API key in every request
+        self.session.params = {"key": self.api_key}
 
-        # Add simple rate-limiting support
         self.last_request_time = 0
-        self.min_request_interval = 0.1  # seconds
+        self.min_request_interval = 0.1
 
         logger.info(f"RAWGClient initialized at {self.base_url}")
 
@@ -82,14 +77,11 @@ class RAWGClient:
             response = self.session.get(url, params=params)
             response.raise_for_status()
             data = response.json()
-
-            # ✅ Validate result structure to prevent issues
             if isinstance(data, dict) and "results" in data:
                 return data
             else:
                 logger.warning(f"Unexpected data structure from {url}: {data}")
                 return {"results": []}
-
         except requests.RequestException as e:
             logger.error(f"Request to RAWG API failed: {e}")
             return {"results": []}
@@ -126,75 +118,46 @@ class RAWGClient:
         except requests.exceptions.RequestException as e:
             raise RAWGAPIError(str(e))
 
-    # ───────────── Cached Methods with Spinner ───────────── #
     def _with_spinner(self, msg, fn, *args, **kwargs):
         with st.spinner(msg):
             return fn(*args, **kwargs)
 
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_games(_self, **kwargs): return _self._with_spinner("Fetching games...", _self._make_request, API_ENDPOINTS["games"], kwargs)
+    def _cache_api_call(self, key, fn):
+        @st.cache_data(ttl=config.cache_ttl)
+        def cached(*args, **kwargs):
+            return fn(*args, **kwargs)
+        return cached
 
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_game_details(_self, game_id): return _self._with_spinner("Fetching game details...", _self._make_request, API_ENDPOINTS["game_detail"].format(id=game_id))
+    def __getattr__(self, name):
+        # auto-cache any public method that starts with 'get_'
+        if name.startswith("get_"):
+            return self._cache_api_call(name, getattr(self.__class__, name).__get__(self))
+        raise AttributeError(f"{self.__class__.__name__} object has no attribute {name}")
 
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_game_screenshots(_self, game_id): return _self._with_spinner("Fetching screenshots...", _self._make_request, API_ENDPOINTS["game_screenshots"].format(id=game_id))
+    def get_games(self, **kwargs): return self._with_spinner("Fetching games...", self._make_request, API_ENDPOINTS["games"], kwargs)
+    def get_game_details(self, game_id): return self._with_spinner("Fetching game details...", self._make_request, API_ENDPOINTS["game_detail"].format(id=game_id))
+    def get_game_screenshots(self, game_id): return self._with_spinner("Fetching screenshots...", self._make_request, API_ENDPOINTS["game_screenshots"].format(id=game_id))
+    def get_game_movies(self, game_id): return self._with_spinner("Fetching game movies...", self._make_request, API_ENDPOINTS["game_movies"].format(id=game_id))
+    def get_game_achievements(self, game_id): return self._with_spinner("Fetching achievements...", self._make_request, API_ENDPOINTS["game_achievements"].format(id=game_id))
+    def get_game_stores(self, game_id): return self._with_spinner("Fetching stores...", self._make_request, API_ENDPOINTS["game_stores"].format(id=game_id))
+    def get_game_series(self, game_id): return self._with_spinner("Fetching series...", self._make_request, API_ENDPOINTS["game_series"].format(id=game_id))
+    def get_developers(self, **kwargs): return self._with_spinner("Fetching developers...", self._make_request, API_ENDPOINTS["developers"], kwargs)
+    def get_developer_details(self, developer_id): return self._with_spinner("Fetching developer details...", self._make_request, API_ENDPOINTS["developer_detail"].format(id=developer_id))
+    def get_publishers(self, **kwargs): return self._with_spinner("Fetching publishers...", self._make_request, API_ENDPOINTS["publishers"], kwargs)
+    def get_publisher_details(self, publisher_id): return self._with_spinner("Fetching publisher details...", self._make_request, API_ENDPOINTS["publisher_detail"].format(id=publisher_id))
+    def get_platforms(self, **kwargs): return self._with_spinner("Fetching platforms...", self._make_request, API_ENDPOINTS["platforms"], kwargs)
+    def get_platform_details(self, platform_id): return self._with_spinner("Fetching platform details...", self._make_request, API_ENDPOINTS["platform_detail"].format(id=platform_id))
+    def get_genres(self, **kwargs): return self._with_spinner("Fetching genres...", self._make_request, API_ENDPOINTS["genres"], kwargs)
+    def get_genre_details(self, genre_id): return self._with_spinner("Fetching genre details...", self._make_request, API_ENDPOINTS["genre_detail"].format(id=genre_id))
+    def get_tags(self, **kwargs): return self._with_spinner("Fetching tags...", self._make_request, API_ENDPOINTS["tags"], kwargs)
+    def get_creators(self, **kwargs): return self._with_spinner("Fetching creators...", self._make_request, API_ENDPOINTS["creators"], kwargs)
+    def get_creator_details(self, creator_id): return self._with_spinner("Fetching creator details...", self._make_request, API_ENDPOINTS["creator_detail"].format(id=creator_id))
+    def get_creator_roles(self, **kwargs): return self._with_spinner("Fetching creator roles...", self._make_request, API_ENDPOINTS["creator_roles"], kwargs)
+    def get_stores(self, **kwargs): return self._with_spinner("Fetching stores list...", self._make_request, API_ENDPOINTS["stores"], kwargs)
 
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_game_movies(_self, game_id): return _self._with_spinner("Fetching game movies...", _self._make_request, API_ENDPOINTS["game_movies"].format(id=game_id))
+    def search_games(self, query: str, **kwargs): return self.get_games(search=query, **kwargs)
 
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_game_achievements(_self, game_id): return _self._with_spinner("Fetching achievements...", _self._make_request, API_ENDPOINTS["game_achievements"].format(id=game_id))
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_game_stores(_self, game_id): return _self._with_spinner("Fetching stores...", _self._make_request, API_ENDPOINTS["game_stores"].format(id=game_id))
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_game_series(_self, game_id): return _self._with_spinner("Fetching series...", _self._make_request, API_ENDPOINTS["game_series"].format(id=game_id))
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_developers(_self, **kwargs): return _self._with_spinner("Fetching developers...", _self._make_request, API_ENDPOINTS["developers"], kwargs)
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_developer_details(_self, developer_id): return _self._with_spinner("Fetching developer details...", _self._make_request, API_ENDPOINTS["developer_detail"].format(id=developer_id))
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_publishers(_self, **kwargs): return _self._with_spinner("Fetching publishers...", _self._make_request, API_ENDPOINTS["publishers"], kwargs)
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_publisher_details(_self, publisher_id): return _self._with_spinner("Fetching publisher details...", _self._make_request, API_ENDPOINTS["publisher_detail"].format(id=publisher_id))
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_platforms(_self, **kwargs): return _self._with_spinner("Fetching platforms...", _self._make_request, API_ENDPOINTS["platforms"], kwargs)
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_platform_details(_self, platform_id): return _self._with_spinner("Fetching platform details...", _self._make_request, API_ENDPOINTS["platform_detail"].format(id=platform_id))
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_genres(_self, **kwargs): return _self._with_spinner("Fetching genres...", _self._make_request, API_ENDPOINTS["genres"], kwargs)
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_genre_details(_self, genre_id): return _self._with_spinner("Fetching genre details...", _self._make_request, API_ENDPOINTS["genre_detail"].format(id=genre_id))
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_tags(_self, **kwargs): return _self._with_spinner("Fetching tags...", _self._make_request, API_ENDPOINTS["tags"], kwargs)
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_creators(_self, **kwargs): return _self._with_spinner("Fetching creators...", _self._make_request, API_ENDPOINTS["creators"], kwargs)
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_creator_details(_self, creator_id): return _self._with_spinner("Fetching creator details...", _self._make_request, API_ENDPOINTS["creator_detail"].format(id=creator_id))
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_creator_roles(_self, **kwargs): return _self._with_spinner("Fetching creator roles...", _self._make_request, API_ENDPOINTS["creator_roles"], kwargs)
-
-    @st.cache_data(ttl=config.cache_ttl)
-    def get_stores(_self, **kwargs): return _self._with_spinner("Fetching stores list...", _self._make_request, API_ENDPOINTS["stores"], kwargs)
-
-    # ──────────────── Utility wrappers (non-cached) ────────────────
-    def search_games(_self, query: str, **kwargs): return _self.get_games(search=query, **kwargs)
-
-    def get_popular_games(_self, time_period: str = "month", **kwargs):
+    def get_popular_games(self, time_period: str = "month", **kwargs):
         now = datetime.now()
         if time_period == "week":
             start_date = now - timedelta(weeks=1)
@@ -204,13 +167,11 @@ class RAWGClient:
             start_date = now - timedelta(days=365)
         else:
             start_date = now - timedelta(weeks=1)
-
         date_range = f"{start_date:%Y-%m-%d},{now:%Y-%m-%d}"
-        return _self.get_games(dates=date_range, ordering="-rating", **kwargs)
+        return self.get_games(dates=date_range, ordering="-rating", **kwargs)
 
-    def get_trending_games(_self, **kwargs): return _self.get_games(ordering="-added", page_size=kwargs.get("page_size", 20), **kwargs)
+    def get_trending_games(self, **kwargs): return self.get_games(ordering="-added", page_size=kwargs.get("page_size", 20), **kwargs)
 
-    # ──────────────── Cleanup ────────────────
     def close(self):
         if self.session:
             self.session.close()
