@@ -166,7 +166,18 @@ class RAWGClient:
     def get_creator_roles(self, **kwargs): return self._with_spinner("Fetching creator roles...", self._make_request, API_ENDPOINTS["creator_roles"], kwargs)
     def get_stores(self, **kwargs): return self._with_spinner("Fetching stores list...", self._make_request, API_ENDPOINTS["stores"], kwargs)
 
-    def search_games(self, query: str, **kwargs): return self.get_games(search=query, **kwargs)
+  def search_games(self, search=None, genres=None, platforms=None, page_size=10):
+    """Search games with optional filters"""
+    params = {
+        "search": search,
+        "genres": genres,
+        "platforms": platforms,
+        "page_size": page_size,
+        "key": self.api_key,
+    }
+    # Clean empty values to avoid API error
+    filtered_params = {k: v for k, v in params.items() if v}
+    return self._make_request(API_ENDPOINTS["games"], filtered_params)
 
     def get_popular_games(self, time_period: str = "month", **kwargs):
         now = datetime.now()
