@@ -1,56 +1,58 @@
 import streamlit as st
 from client.rawg_client import RAWGClient
-import config
+from datetime import datetime
 
 def main():
     st.title("🎮 Browse Games")
-    rawg = RAWGClient(api_key=st.secrets["RAWG_API_KEY"])
 
-    # Sidebar Search Filters
+    # Load API key from environment or Streamlit secrets
+    api_key = st.secrets["RAWG_API_KEY"]
+    rawg = RAWGClient(api_key)
+
+    # Sidebar filters
     with st.sidebar:
-        st.header("🔎 Search Filters")
+        st.header("🔍 Search Filters")
+        search_query = st.text_input("Search for games", "")
+        genres = st.text_input("Genres (comma separated)", "")
+        ordering = st.selectbox("Order by", ["", "name", "-released", "-rating", "-added"])
+        page_size = st.slider("Number of results", 5, 40, 10)
 
-        search_query = st.text_input("Search for a game")
+    # Create parameters dict
+    params = {
+        "search": search_query if search_query else None,
+        "genres": genres if genres else None,
+        "ordering": ordering if ordering else None,
+        "page_size": page_size
+    }
 
-        genres_data = rawg.get_genres()
-        genre_options = [genre["name"] for genre in genres_data.get("results", [])]
-        selected_genre = st.selectbox("Genre", ["Any"] + genre_options)
+    # Filter out None values
+    params = {k: v for k, v in params.items() if v is not None}
 
-        platforms_data = rawg.get_platforms()
-        platform_options = [platform["name"] for platform in platforms_data.get("results", [])]
-        selected_platform = st.selectbox("Platform", ["Any"] + platform_options)
+    try:
+        results = rawg.search_games(**params)
+        if not results:
+            st.info("No games found.")
+            return
 
-        page_size = st.slider("Results per page", 5, 20, 10)
+        for game in results:
+            with st.container():
+                st.subheader(game.get("name", "Unknown Title"))
+                if game.get("background_image"):
+                    st.image(game["background_image"], use_column_width=True)
 
-    # Convert genre/platform names to IDs for API
-    genre_id = next((g["id"] for g in genres_data.get("results", []) if g["name"] == selected_genre), "") if selected_genre != "Any" else ""
-    platform_id = next((p["id"] for p in platforms_data.get("results", []) if p["name"] == selected_platform), "") if selected_platform != "Any" else ""
+                released = game.get("released")
+                if released:
+                    released_date = datetime.strptime(released, "%Y-%m-%d").strftime("%b %d, %Y")
+                    st.markdown(f"**Released:** {released_date}")
 
-    if search_query:
-        results = rawg.search_games(
-            search=search_query,
-            genres=genre_id,
-            platforms=platform_id,
-            page_size=page_size
-        )
+                rating = game.get("rating")
+                if rating:
+                    st.markdown(f"**Rating:** {rating} ⭐")
 
-        games = results.get("results", [])
-        if not games:
-            st.warning("No games found. Try adjusting your filters.")
-        else:
-            for game in games:
-                with st.container():
-                    st.subheader(game["name"])
-                    if game.get("background_image"):
-                        st.image(game["background_image"], use_column_width=True)
-                    st.markdown(f"**Released:** {game.get('released', 'N/A')}")
-                    st.markdown(f"**Rating:** {game.get('rating', 'N/A')} ⭐")
-                    st.markdown("**Platforms:** " + ", ".join([p["platform"]["name"] for p in game.get("platforms", [])]))
-                    if game.get("publishers"):
-                        st.markdown("**Publisher:** " + ", ".join([pub["name"] for pub in game["publishers"]]))
-                    st.markdown("---")
-    else:
-        st.info("Enter a search query to find games.")
+                st.markdown("---")
+
+    except Exception as e:
+        st.error(f"Failed to fetch games: {e}")
 
 if __name__ == "__main__":
     main()
