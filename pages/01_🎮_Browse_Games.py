@@ -1,70 +1,56 @@
 import streamlit as st
-from rawg_client import RAWGClient
+from client.rawg_client import RAWGClient
 import config
-
 
 def main():
     st.title("🎮 Browse Games")
-    rawg = RAWGClient(st.secrets["RAWG_API_KEY"])
+    rawg = RAWGClient(api_key=st.secrets["RAWG_API_KEY"])
 
-    # Sidebar Filters
+    # Sidebar Search Filters
     with st.sidebar:
-        st.header("🔎 Filters")
+        st.header("🔎 Search Filters")
+
+        search_query = st.text_input("Search for a game")
+
         genres_data = rawg.get_genres()
-        platforms_data = rawg.get_platforms()
-
-        genre_options = [g["name"] for g in genres_data["results"]] if genres_data else []
-        platform_options = [p["name"] for p in platforms_data["results"]] if platforms_data else []
-
+        genre_options = [genre["name"] for genre in genres_data.get("results", [])]
         selected_genre = st.selectbox("Genre", ["Any"] + genre_options)
+
+        platforms_data = rawg.get_platforms()
+        platform_options = [platform["name"] for platform in platforms_data.get("results", [])]
         selected_platform = st.selectbox("Platform", ["Any"] + platform_options)
-        search_query = st.text_input("Search Games")
+
+        page_size = st.slider("Results per page", 5, 20, 10)
+
+    # Convert genre/platform names to IDs for API
+    genre_id = next((g["id"] for g in genres_data.get("results", []) if g["name"] == selected_genre), "") if selected_genre != "Any" else ""
+    platform_id = next((p["id"] for p in platforms_data.get("results", []) if p["name"] == selected_platform), "") if selected_platform != "Any" else ""
 
     if search_query:
-        st.write(f"### Results for: {search_query}")
-        params = {"search": search_query, "page_size": 12}
+        results = rawg.search_games(
+            search=search_query,
+            genres=genre_id,
+            platforms=platform_id,
+            page_size=page_size
+        )
 
-        if selected_genre != "Any":
-            genre_id = next((g["id"] for g in genres_data["results"] if g["name"] == selected_genre), None)
-            if genre_id:
-                params["genres"] = genre_id
-
-        if selected_platform != "Any":
-            platform_id = next((p["id"] for p in platforms_data["results"] if p["name"] == selected_platform), None)
-            if platform_id:
-                params["platforms"] = platform_id
-
-        results = rawg.search_games(**params)
-
-        if results and results.get("results"):
-            for game in results["results"]:
-                with st.container():
-                    st.subheader(game.get("name", "Unknown Game"))
-                    cols = st.columns([1, 3])
-
-                    with cols[0]:
-                        if game.get("background_image"):
-                            st.image(game["background_image"], width=150)
-
-                    with cols[1]:
-                        st.markdown(f"**Released:** {game.get('released', 'N/A')}")
-                        st.markdown(f"**Rating:** {game.get('rating', 'N/A')}")
-
-                        if game.get("platforms"):
-                            platforms = [p["platform"]["name"] for p in game["platforms"]]
-                            st.markdown(f"**Platforms:** {', '.join(platforms)}")
-
-                        if game.get("genres"):
-                            genres = [g["name"] for g in game["genres"]]
-                            st.markdown(f"**Genres:** {', '.join(genres)}")
-
-                        if game.get("publishers"):
-                            publishers = [p["name"] for p in game["publishers"]]
-                            st.markdown(f"**Publishers:** {', '.join(publishers)}")
-
+        games = results.get("results", [])
+        if not games:
+            st.warning("No games found. Try adjusting your filters.")
         else:
-            st.warning("No results found. Try refining your search or filters.")
-
+            for game in games:
+                with st.container():
+                    st.subheader(game["name"])
+                    if game.get("background_image"):
+                        st.image(game["background_image"], use_column_width=True)
+                    st.markdown(f"**Released:** {game.get('released', 'N/A')}")
+                    st.markdown(f"**Rating:** {game.get('rating', 'N/A')} ⭐")
+                    st.markdown("**Platforms:** " + ", ".join([p["platform"]["name"] for p in game.get("platforms", [])]))
+                    if game.get("publishers"):
+                        st.markdown("**Publisher:** " + ", ".join([pub["name"] for pub in game["publishers"]]))
+                    st.markdown("---")
+    else:
+        st.info("Enter a search query to find games.")
 
 if __name__ == "__main__":
     main()
