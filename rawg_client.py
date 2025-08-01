@@ -46,19 +46,53 @@ def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
 
 # ───────────── RAWG API Client ─────────────
 class RAWGClient:
-    def __init__(self, api_key: str, base_url: str = None, user_agent: str = None):
-        self.api_key = st.secrets["RAWG_API_KEY"]
+    def __init__(self, api_key: str = None, base_url: str = None, user_agent: str = None):
+        # Load API key from argument or Streamlit secrets
+        self.api_key = api_key or st.secrets["RAWG_API_KEY"]
+
+        # Use default config values if not provided
         self.base_url = base_url or config.base_url
         self.user_agent = user_agent or "RAWGStreamlitApp/1.0"
+
+        # Prepare a session with default headers and parameters
         self.session = requests.Session()
         self.session.headers.update({
             "User-Agent": self.user_agent,
             "Accept": "application/json",
             "Content-Type": "application/json"
         })
+        self.session.params = {"key": self.api_key}  # ✅ Always include API key in every request
+
+        # Add simple rate-limiting support
         self.last_request_time = 0
-        self.min_request_interval = 0.1
+        self.min_request_interval = 0.1  # seconds
+
         logger.info(f"RAWGClient initialized at {self.base_url}")
+
+    def _throttle(self):
+        elapsed = time.time() - self.last_request_time
+        if elapsed < self.min_request_interval:
+            time.sleep(self.min_request_interval - elapsed)
+        self.last_request_time = time.time()
+
+    def _get(self, endpoint: str, params: dict = None):
+        self._throttle()
+        url = f"{self.base_url}{endpoint}"
+        try:
+            response = self.session.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            # ✅ Validate result structure to prevent issues
+            if isinstance(data, dict) and "results" in data:
+                return data
+            else:
+                logger.warning(f"Unexpected data structure from {url}: {data}")
+                return {"results": []}
+
+        except requests.RequestException as e:
+            logger.error(f"Request to RAWG API failed: {e}")
+            return {"results": []}
 
     def _wait_for_rate_limit(self):
         elapsed = time.time() - self.last_request_time
