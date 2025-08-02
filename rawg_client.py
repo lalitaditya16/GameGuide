@@ -51,6 +51,34 @@ class RAWGClient:
         response.raise_for_status()
         return response.json().get("results", [])
 
+    def search_games_popular(self, ordering="-rating", dates=None, page_size=6):
+        endpoint = f"{self.BASE_URL}/games"
+        params = {
+            "key": self.api_key,
+            "ordering": ordering,
+            "page_size": page_size,
+        }
+        if dates:
+            params["dates"] = dates
+
+        response = requests.get(endpoint, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        games = data.get("results", [])
+        return [
+            {
+                "name": game.get("name"),
+                "rating": game.get("rating"),
+                "released": game.get("released"),
+                "platforms": [p["platform"]["name"] for p in game.get("platforms", []) if p.get("platform")],
+                "genres": [g["name"] for g in game.get("genres", [])],
+                "background_image": game.get("background_image"),
+            }
+            for game in games
+        ]
+
+
     def get_game_details(self, game_id):
         return self._get(f"/games/{game_id}")
 
