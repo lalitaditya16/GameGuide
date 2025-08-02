@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from client.rawg_client import RAWGClient
+from rawg_client import RAWGClient
 
 st.set_page_config(page_title="📊 Game Analytics", page_icon="📊", layout="wide")
 st.title("📊 Game Analytics Dashboard")
