@@ -22,7 +22,7 @@ SYSTEM_PROMPT = (
 # Groq LLM setup
 llm = ChatGroq(
     groq_api_key=config.groq_api_key,
-    model_name="mixtral-8x7b-32768",  # e.g., "mixtral-8x7b-32768"
+    model_name="llama-3.1-8b-instant",  # e.g., "mixtral-8x7b-32768"
     temperature=0,
     max_tokens=config.groq_max_tokens,
 )
