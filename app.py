@@ -8,7 +8,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 # ✅ Ensure this has no spaces/tabs before it
-from client.rawg_client import RAWGClient
+from rawg_client import RAWGClient
 from helpers import init_session_state, load_custom_css, validate_environment, get_chat_manager
 
 
