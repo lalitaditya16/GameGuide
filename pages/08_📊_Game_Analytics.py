@@ -29,7 +29,7 @@ genre_param = None  # Not using genre filtering for now
 # Fetch game data
 with st.spinner("Fetching game data..."):
     try:
-        games_data = rawg.search_games(
+        games_data = rawg.search_games_analytics(
             query="",
             genres=genre_param,
             ordering="-added",
