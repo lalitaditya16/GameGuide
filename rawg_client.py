@@ -15,21 +15,26 @@ class RAWGClient:
         return response.json()
 
     
-    def search_games(self, query: str = "", genres: str = "", ordering: str = "", page_size: int = 20, year: int = None):
-        params = {
-            "key": self.api_key,
-            "search": query,
-            "genres": genres,
-            "ordering": ordering,
-            "page_size": page_size
-        }
+    def search_games(self, query="", genres=None, ordering=None, page_size=10, year=None):
+    url = f"{self.BASE_URL}/games"
+    params = {
+        "key": self.api_key,
+        "search": query,
+        "page_size": page_size,
+    }
+    if genres:
+        params["genres"] = genres
+    if ordering:
+        params["ordering"] = ordering
+    if year:
+        params["dates"] = f"{year}-01-01,{year}-12-31"
 
-        if year:
-            params["dates"] = f"{year}-01-01,{year}-12-31"
+    print("[DEBUG] Final API Params:", params)  # ← use this to debug if needed
 
-        response = requests.get(f"{self.base_url}/games", params=params)
-        response.raise_for_status()
-        return response.json().get("results", [])
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+    return response.json().get("results", [])
+
 
     def get_game_details(self, game_id):
         return self._get(f"/games/{game_id}")
