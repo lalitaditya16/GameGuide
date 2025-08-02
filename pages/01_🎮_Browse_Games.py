@@ -35,7 +35,7 @@ ordering = st.sidebar.selectbox("Sort by", list(ordering_options.keys()))
 
 # Fetch games
 with st.spinner("Fetching games..."):
-    games = rawg.search_games(
+    games = rawg.search_games_browse(
         query=search_query,
         genres=selected_genre if selected_genre else None,
         ordering=ordering_options[ordering],
