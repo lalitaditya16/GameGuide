@@ -9,8 +9,23 @@ st.set_page_config(page_title="🎮 Browse Games", page_icon="🎮")
 st.title("🎮 Browse Games")
 st.markdown("Search for popular games using the RAWG API.")
 
+# Fetch genres and platforms
+genres = rawg.get_genres()
+platforms = rawg.get_platforms()
+
 # Sidebar - Search options
 search_query = st.sidebar.text_input("Search Games", "")
+
+selected_genre = st.sidebar.selectbox(
+    "Filter by Genre",
+    options=["All"] + [genre["name"] for genre in genres]
+)
+
+selected_platform = st.sidebar.selectbox(
+    "Filter by Platform",
+    options=["All"] + [platform["name"] for platform in platforms]
+)
+
 sort_option = st.sidebar.selectbox(
     "Sort by",
     {
@@ -22,10 +37,16 @@ sort_option = st.sidebar.selectbox(
     index=0
 )
 
+# Prepare filters
+genre_slug = next((g["slug"] for g in genres if g["name"] == selected_genre), None) if selected_genre != "All" else None
+platform_id = next((p["id"] for p in platforms if p["name"] == selected_platform), None) if selected_platform != "All" else None
+
 # Search games
 games = rawg.search_games_browse(
     query=search_query,
     ordering=sort_option,
+    genre=genre_slug,
+    platform=platform_id,
     page_size=20
 )
 
