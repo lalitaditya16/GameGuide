@@ -1,59 +1,46 @@
-# pages/02_🎮_Browse_Games.py
-
 import streamlit as st
-from dotenv import load_dotenv
 from rawg_client import RAWGClient
-from datetime import datetime
-
-
-load_dotenv()
-st.set_page_config(page_title="🎮 Browse Games", layout="wide")
-
-st.title("🎮 Browse Games")
 
 # Initialize API client
 rawg = RAWGClient(api_key=st.secrets["RAWG_API_KEY"])
 
-# Sidebar Filters
-st.sidebar.header("Filters")
+# Page config
+st.set_page_config(page_title="🎮 Browse Games", page_icon="🎮")
+st.title("🎮 Browse Games")
+st.markdown("Search for popular games using the RAWG API.")
 
-search_query = st.sidebar.text_input("Search by game title")
+# Sidebar - Search options
+search_query = st.sidebar.text_input("Search Games", "")
+sort_option = st.sidebar.selectbox(
+    "Sort by",
+    {
+        "Most Added": "-added",
+        "Highest Rated": "-rating",
+        "Newest": "-released",
+        "Name (A-Z)": "name"
+    },
+    index=0
+)
 
-# You can hardcode or fetch genres from RAWG API
-genre_options = ["action", "adventure", "indie", "rpg", "strategy", "shooter"]
-selected_genre = st.sidebar.selectbox("Genre", [""] + genre_options)
+# Search games
+games = rawg.search_games_browse(
+    query=search_query,
+    ordering=sort_option,
+    page_size=20
+)
 
-year = st.sidebar.slider("Release Year", 2000, datetime.now().year, datetime.now().year)
-
-ordering_options = {
-    "Name": "name",
-    "Release Date": "-released",
-    "Rating": "-rating",
-    "Metacritic": "-metacritic"
-}
-ordering = st.sidebar.selectbox("Sort by", list(ordering_options.keys()))
-
-# Fetch games
-with st.spinner("Fetching games..."):
-    games = rawg.search_games_browse(
-        query=search_query,
-        genres=selected_genre if selected_genre else None,
-        ordering=ordering_options[ordering],
-        year=year
-    )
-
+# Display games
 if not games:
-    st.warning("No games found for the selected filters.")
+    st.warning("No games found.")
 else:
     for game in games:
-        with st.container():
-            cols = st.columns([1, 3])
-            with cols[0]:
-                st.image(game["background_image"], width=150)
-            with cols[1]:
-                st.subheader(game["name"])
-                st.markdown(f"**Released:** {game['released'] or 'N/A'}")
-                st.markdown(f"**Rating:** {game['rating']}/5 from {game['ratings_count']} ratings")
-                st.markdown(f"**Genres:** {', '.join([g['name'] for g in game.get('genres', [])])}")
-                st.markdown(f"[More Info](https://rawg.io/games/{game['slug']})")
-
+        st.subheader(game["name"])
+        cols = st.columns([1, 3])
+        with cols[0]:
+            if game.get("background_image"):
+                st.image(game["background_image"], width=120)
+        with cols[1]:
+            st.write(f"**Released:** {game.get('released', 'N/A')}")
+            st.write(f"**Rating:** {game.get('rating', 'N/A')} / 5 ⭐")
+            st.write(f"**Genres:** {', '.join([genre['name'] for genre in game.get('genres', [])])}")
+            st.markdown("---")
