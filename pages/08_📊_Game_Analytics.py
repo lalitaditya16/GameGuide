@@ -4,7 +4,7 @@ import plotly.express as px
 from datetime import datetime
 
 # Assuming rawg_client.py has RAWGClient properly implemented
-from utils.rawg_client import RAWGClient
+from rawg_client import RAWGClient
 
 st.set_page_config(page_title="Game Analytics", page_icon="📊", layout="wide")
 
