@@ -11,6 +11,7 @@ st.caption("Chat with an AI expert about the 2025 gaming landscape.")
 
 # Strict prompt for 2025-based answers
 today = datetime.now().strftime("%B %d, %Y")
+st.write("Today's date is" + today)
 SYSTEM_PROMPT = (
     f"Today's date is {today}. You are a helpful and concise gaming assistant. "
     "The current year is **2025** — always assume that when answering. "
