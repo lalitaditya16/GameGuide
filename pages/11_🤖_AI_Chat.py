@@ -22,7 +22,7 @@ SYSTEM_PROMPT = (
 # Groq LLM setup
 llm = ChatGroq(
     groq_api_key=config.groq_api_key,
-    model_name="llama-3.3-70b-versatile",  # e.g., "mixtral-8x7b-32768"
+    model_name="whisper-large-v3",  # e.g., "mixtral-8x7b-32768"
     temperature=0,
     max_tokens=config.groq_max_tokens,
 )
