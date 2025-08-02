@@ -10,10 +10,10 @@ st.title("🤖 AI Game Assistant")
 st.write("Chat with a fast AI about games, trends, recommendations, and industry news. Ask anything!")
 
 # System prompt with current date for real-world responses
-today = datetime.now().strftime("%B %d, %Y")  # e.g., "July 31, 2025"
+today = datetime.now().strftime("%B %d, %Y")  # e.g., "July 30, 2025"
 SYSTEM_PROMPT = (
     f"Today's date is {today}. You are a gaming expert AI assistant. Be helpful, concise, "
-    "and always answer with 2025 as the current year."
+    "and always answer with 2025 as the current year regardless of what the model thinks the year is."
 )
 
 # ────────── Groq LLM Setup ──────────
@@ -26,11 +26,11 @@ llm = ChatGroq(
 
 # Initialize chat history in Streamlit session state
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = [SystemMessage(content=SYSTEM_PROMPT)]
+    st.session_state.chat_history = [HumanMessage(content="Hi")]
 
 def display_chat():
     """Show full chat message history."""
-    for msg in st.session_state.chat_history[1:]:  # skip system prompt in display
+    for msg in st.session_state.chat_history:
         if isinstance(msg, HumanMessage):
             st.chat_message("user").write(msg.content)
         elif isinstance(msg, AIMessage):
@@ -43,20 +43,20 @@ if prompt := st.chat_input("Type your message..."):
     # Add new user message
     st.session_state.chat_history.append(HumanMessage(content=prompt))
 
-    # LLM call: send full chat history for context (system_prompt + prior messages)
+    # Create full prompt with system message at the start
+    full_chat = [SystemMessage(content=SYSTEM_PROMPT)] + st.session_state.chat_history
+
+    # LLM call
     with st.chat_message("assistant"):
         with st.spinner("Groq AI is typing..."):
             try:
-                reply = llm(st.session_state.chat_history)
+                reply = llm(full_chat)
                 st.write(reply.content)
                 st.session_state.chat_history.append(AIMessage(content=reply.content))
             except Exception as e:
                 st.error(f"AI error: {e}")
 
-# ────────── Optional: Reset button ──────────
+# ────────── Reset button ──────────
 if st.button("Reset conversation"):
-    st.session_state.chat_history = [SystemMessage(content=SYSTEM_PROMPT)]
+    st.session_state.chat_history = [HumanMessage(content="Hi")]
     st.experimental_rerun()
-
-# Optional hello message, you can remove if you want
-st.write("Hello, AI Chat here!")
