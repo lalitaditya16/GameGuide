@@ -4,16 +4,15 @@ from langchain_groq import ChatGroq
 from langchain.schema import SystemMessage, AIMessage, HumanMessage
 from config import config
 
-# ──────────────────────────────────────────────
 st.set_page_config(page_title="AI Game Chat", page_icon="🤖")
 st.title("🤖 AI Game Assistant")
 st.write("Chat with a fast AI about games, trends, recommendations, and industry news. Ask anything!")
 
-# System prompt with current date for real-world responses
-today = datetime.now().strftime("%B %d, %Y")  # e.g., "July 30, 2025"
+# System prompt
 SYSTEM_PROMPT = (
-    f"Today's date is {today}. You are a gaming expert AI assistant. Be helpful, concise, "
-    "and always answer with 2025 as the current year regardless of what the model thinks the year is."
+    "Today's date is July 30, 2025. You are a gaming expert AI assistant. "
+    "You must always assume the current year is 2025. Answer accordingly. "
+    "Be concise, helpful, and context-aware about recent game trends and titles."
 )
 
 # ────────── Groq LLM Setup ──────────
@@ -24,39 +23,29 @@ llm = ChatGroq(
     max_tokens=config.groq_max_tokens,
 )
 
-# Initialize chat history in Streamlit session state
+# ────────── Session State Setup ──────────
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = [HumanMessage(content="Hi")]
+    st.session_state.chat_history = [SystemMessage(content=SYSTEM_PROMPT)]
 
-def display_chat():
-    """Show full chat message history."""
-    for msg in st.session_state.chat_history:
-        if isinstance(msg, HumanMessage):
-            st.chat_message("user").write(msg.content)
-        elif isinstance(msg, AIMessage):
-            st.chat_message("assistant").write(msg.content)
+# ────────── Display Chat ──────────
+for msg in st.session_state.chat_history[1:]:  # skip system message display
+    role = "user" if isinstance(msg, HumanMessage) else "assistant"
+    st.chat_message(role).write(msg.content)
 
-# ────────── Chat UI ──────────
-display_chat()
-
-if prompt := st.chat_input("Type your message..."):
-    # Add new user message
+# ────────── Input Handling ──────────
+if prompt := st.chat_input("Ask me anything about games..."):
     st.session_state.chat_history.append(HumanMessage(content=prompt))
 
-    # Create full prompt with system message at the start
-    full_chat = [SystemMessage(content=SYSTEM_PROMPT)] + st.session_state.chat_history
-
-    # LLM call
     with st.chat_message("assistant"):
-        with st.spinner("Groq AI is typing..."):
+        with st.spinner("Thinking like it's 2025..."):
             try:
-                reply = llm(full_chat)
-                st.write(reply.content)
+                reply = llm(st.session_state.chat_history)
                 st.session_state.chat_history.append(AIMessage(content=reply.content))
+                st.write(reply.content)
             except Exception as e:
                 st.error(f"AI error: {e}")
 
-# ────────── Reset button ──────────
+# ────────── Reset Button ──────────
 if st.button("Reset conversation"):
-    st.session_state.chat_history = [HumanMessage(content="Hi")]
+    st.session_state.chat_history = [SystemMessage(content=SYSTEM_PROMPT)]
     st.experimental_rerun()
