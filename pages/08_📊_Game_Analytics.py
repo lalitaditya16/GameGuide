@@ -12,7 +12,7 @@ st.title("📊 Game Analytics")
 st.markdown("Explore game trends, ratings, and releases using data from the RAWG API.")
 
 # Initialize RAWG client
-rawg = RAWGClient()
+rawg = RAWGClient(api_key=st.secrets["RAWG_API_KEY"])
 
 # Sidebar filters
 st.sidebar.header("🔎 Filters")
