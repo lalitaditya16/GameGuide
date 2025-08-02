@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-
-# Assuming rawg_client.py has RAWGClient properly implemented
 from rawg_client import RAWGClient
 
 st.set_page_config(page_title="Game Analytics", page_icon="📊", layout="wide")
@@ -20,18 +18,23 @@ current_year = datetime.now().year
 years = list(range(2000, current_year + 1))[::-1]
 selected_year = st.sidebar.selectbox("Release Year", years, index=0)
 
-# Optional genre filter setup (if you want it later)
-# all_genres = ["Action", "Adventure", "Strategy", "Indie", "RPG", "Shooter"]
-# selected_genre = st.sidebar.selectbox("Genre", options=["All"] + all_genres)
-# genre_param = None if selected_genre == "All" else selected_genre.lower()
-genre_param = None  # Not using genre filtering for now
+# Genre and platform filters (optional)
+all_genres = rawg.get_genres()
+genre_options = ["All"] + [genre["name"] for genre in all_genres]
+selected_genre = st.sidebar.selectbox("Genre", genre_options)
+genre_param = None if selected_genre == "All" else selected_genre.lower()
+
+all_platforms = rawg.get_platforms()
+platform_options = ["All"] + [platform["name"] for platform in all_platforms]
+selected_platform = st.sidebar.selectbox("Platform", platform_options)
+platform_param = None if selected_platform == "All" else selected_platform.lower()
 
 # Fetch game data
 with st.spinner("Fetching game data..."):
     try:
         games_data = rawg.search_games_analytics(
-            query="",
             genres=genre_param,
+            platforms=platform_param,
             ordering="-added",
             page_size=100,
             year=selected_year
