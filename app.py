@@ -239,7 +239,7 @@ def main():
     try:
         # Fetch popular games
         with st.spinner("Loading popular games..."):
-            popular_games = rawg_client.get_games(
+            popular_games = rawg_client.search_games(
                 ordering="-rating",
                 dates=f"{datetime.now().year}-{datetime.now().month:02d}-01,"
                       f"{datetime.now().year}-{datetime.now().month:02d}-31",
