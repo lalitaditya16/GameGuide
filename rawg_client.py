@@ -16,7 +16,7 @@ class RAWGClient:
         return response.json()
 
     
-     def search_games_browse(self, query="", ordering="-added", page_size=20):
+    def search_games_browse(self, query="", ordering="-added", page_size=20):
         params = {
             "key": self.api_key,
             "search": query,
