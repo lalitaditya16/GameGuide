@@ -239,12 +239,15 @@ def main():
     try:
         # Fetch popular games
         with st.spinner("Loading popular games..."):
-            popular_games = rawg_client.search_games(
-                ordering="-rating",
-                dates=f"{datetime.now().year}-{datetime.now().month:02d}-01,"
-                      f"{datetime.now().year}-{datetime.now().month:02d}-31",
-                page_size=6
-            )
+            current_month = datetime.now().strftime("%Y-%m")
+            start_date = f"{current_month}-01"
+            end_date = f"{current_month}-31"
+
+            popular_games = rawg_client.search_games_popular(
+            ordering="-rating",
+            dates=f"{start_date},{end_date}",
+            page_size=6
+        )
 
         if popular_games and popular_games.get('results'):
             games_cols = st.columns(3)
