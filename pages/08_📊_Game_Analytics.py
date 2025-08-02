@@ -62,7 +62,17 @@ st.plotly_chart(fig_rating, use_container_width=True)
 # Visualization 2: Top Rated Games
 top_games = df.sort_values(by="rating", ascending=False).head(10)
 st.subheader("🏆 Top 10 Rated Games")
-st.dataframe(top_games[["name", "rating", "released"]], use_container_width=True)
+from st_aggrid import AgGrid, GridOptionsBuilder
+
+# Build grid options
+gb = GridOptionsBuilder.from_dataframe(top_games[["name", "rating", "released"]])
+gb.configure_pagination(paginationAutoPageSize=True)
+gb.configure_default_column(wrapText=True, autoHeight=True)
+grid_options = gb.build()
+
+# Render interactive, styled table
+AgGrid(top_games[["name", "rating", "released"]], gridOptions=grid_options, theme="material", height=400)
+
 
 # Visualization 3: Release Timeline
 st.subheader("📅 Release Timeline")
