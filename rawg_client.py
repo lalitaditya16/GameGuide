@@ -1,6 +1,7 @@
 import requests
 
 class RAWGClient:
+    BASE_URL = "https://api.rawg.io/api"
     def __init__(self, api_key):
         self.api_key = api_key
         self.base_url = "https://api.rawg.io/api"
