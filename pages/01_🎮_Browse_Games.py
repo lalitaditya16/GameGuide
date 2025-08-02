@@ -10,7 +10,7 @@ st.set_page_config(page_title="🎮 Browse Games", layout="wide")
 st.title("🎮 Browse Games")
 
 # Initialize API client
-rawg = RAWGClient()
+rawg = RAWGClient(api_key=st.secrets("RAWG_API_KEY"))
 
 # Sidebar Filters
 st.sidebar.header("Filters")
