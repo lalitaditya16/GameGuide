@@ -49,7 +49,7 @@ if not games_data:
     st.stop()
 
 # Raw API response sample (debug)
-st.write("Raw Sample", games_data[:3])
+
 
 # Data Preprocessing
 df = pd.DataFrame(games_data)
