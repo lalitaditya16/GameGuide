@@ -25,11 +25,11 @@ st.set_page_config(
         'Get Help': 'https://github.com/yourusername/rawg-streamlit-app',
         'Report a bug': 'https://github.com/yourusername/rawg-streamlit-app/issues',
         'About': """
-        # RAWG Gaming Database Explorer
+        # GAMEGUIDE powered by RAWG
 
-        **Version**: 2.0.0 (with Groq AI integration)
+        **Version**: 1.0.0 (with Groq AI integration)
 
-        **Description**: A comprehensive web application for exploring the RAWG Video Games Database with AI-powered features.
+        **Description**: A comprehensive web application for exploring video games with AI-powered features.
 
         **Features**:
         - 🎮 Browse 500,000+ games
