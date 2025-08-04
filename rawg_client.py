@@ -1,98 +1,84 @@
-import requests
+import streamlit as st
+from datetime import datetime
+import pandas as pd
+import plotly.express as px
+from utils.rawg_client import RAWGClient
 
-class RAWGClient:
-    BASE_URL = "https://api.rawg.io/api"
+# Load RAWG API client
+api_key = st.secrets["RAWG_API_KEY"]
+rawg_client = RAWGClient(api_key)
 
-    def __init__(self, api_key):
-        self.api_key = api_key
-        self.base_url = "https://api.rawg.io/api"
+# Sidebar filters
+st.sidebar.header("🔎 Filters")
+selected_year = st.sidebar.selectbox("Select Year", list(range(2025, 2004, -1)), index=0)
+genres = rawg_client.get_genres()
+platforms = rawg_client.get_platforms()
 
-    def _get(self, endpoint, params=None):
-        url = f"{self.base_url}{endpoint}"
-        if params is None:
-            params = {}
-        params["key"] = self.api_key
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        return response.json()
+genre_options = [g["name"] for g in genres]
+platform_options = [p["name"] for p in platforms]
 
-    def search_games_browse(self, query="", ordering="-added", genre=None, platform=None, page_size=20):
-        params = {
-            "key": self.api_key,
-            "search": query,
-            "ordering": ordering,
-            "page_size": page_size,
-        }
-        if genre:
-            params["genres"] = genre
-        if platform:
-            params["platforms"] = platform
+genre_mapping = {g["name"]: g["id"] for g in genres}
+platform_mapping = {p["name"]: p["id"] for p in platforms}
 
-        url = f"{self.BASE_URL}/games"
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        return response.json().get("results", [])
+selected_genre = st.sidebar.selectbox("Select Genre", [None] + genre_options)
+selected_platform = st.sidebar.selectbox("Select Platform", [None] + platform_options)
 
-    def search_games_analytics(self, ordering="-rating", genres=None, platforms=None, year=None, page_size=40):
-        params = {
-            "key": self.api_key,
-            "ordering": ordering,
-            "page_size": page_size,
-        }
-        if genres:
-            params["genres"] = genres
-        if platforms:
-            params["platforms"] = platforms
-        if year:
-            params["dates"] = f"{year}-01-01,{year}-12-31"
+# Fetch data
+with st.spinner("Loading analytics data..."):
+    raw_data = rawg_client.search_games_analytics(
+        ordering="-rating",
+        genres=genre_mapping.get(selected_genre),
+        platforms=platform_mapping.get(selected_platform),
+        year=selected_year,
+        page_size=40
+    )
 
-        url = f"{self.BASE_URL}/games"
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        return response.json().get("results", [])
+# Convert to DataFrame
+data = []
+for game in raw_data:
+    data.append({
+        "Name": game.get("name"),
+        "Released": game.get("released"),
+        "Rating": game.get("rating"),
+        "Playtime": game.get("playtime"),
+        "Genres": ", ".join([g["name"] for g in game.get("genres", [])]),
+        "Platforms": ", ".join([p["platform"]["name"] for p in game.get("platforms", []) if p.get("platform")]),
+    })
 
-    def search_games_popular(self, ordering="-rating", dates=None, page_size=6):
-        endpoint = f"{self.BASE_URL}/games"
-        params = {
-            "key": self.api_key,
-            "ordering": ordering,
-            "page_size": page_size,
-        }
-        if dates:
-            params["dates"] = dates
+df = pd.DataFrame(data)
 
-        response = requests.get(endpoint, params=params)
-        response.raise_for_status()
-        data = response.json()
+# Page layout
+st.markdown("""
+    <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #36D1DC 0%, #5B86E5 100%); color: white; text-align: center; margin-bottom: 2rem;'>
+        <h2 style='margin: 0;'>📊 Game Analytics ({})</h2>
+        <p style='margin: 0.5rem 0;'>Explore top rated games and trends for {}{}</p>
+    </div>
+""".format(selected_year, selected_genre + " | " if selected_genre else "", selected_platform if selected_platform else ""), unsafe_allow_html=True)
 
-        games = data.get("results", [])
-        return [
-            {
-                "name": game.get("name"),
-                "rating": game.get("rating"),
-                "released": game.get("released"),
-                "platforms": [p["platform"]["name"] for p in game.get("platforms", []) if p.get("platform")],
-                "genres": [g["name"] for g in game.get("genres", [])],
-                "background_image": game.get("background_image"),
-            }
-            for game in games
-        ]
+# Display table
+st.dataframe(df, use_container_width=True)
 
+# Visualizations
+col1, col2 = st.columns(2)
 
-    def get_game_details(self, game_id):
-        return self._get(f"/games/{game_id}")
+with col1:
+    if not df.empty:
+        top_genres = df["Genres"].str.split(", ").explode().value_counts().nlargest(10).reset_index()
+        top_genres.columns = ["Genre", "Count"]
+        fig = px.bar(top_genres, x="Count", y="Genre", orientation="h",
+                     title="🎮 Top Genres", color="Count", color_continuous_scale="Agsunset")
+        st.plotly_chart(fig, use_container_width=True)
 
-    def get_genres(self):
-        return self._get("/genres").get("results", [])
+with col2:
+    if not df.empty:
+        top_platforms = df["Platforms"].str.split(", ").explode().value_counts().nlargest(10).reset_index()
+        top_platforms.columns = ["Platform", "Count"]
+        fig = px.pie(top_platforms, values="Count", names="Platform", title="🕹️ Platform Distribution")
+        st.plotly_chart(fig, use_container_width=True)
 
-    def get_platforms(self):
-        return self._get("/platforms").get("results", [])
-
-    def get_developers(self):
-        return self._get("/developers").get("results", [])
-
-    def get_publishers(self):
-        return self._get("/publishers").get("results", [])
-
-    def get_game_screenshots(self, game_id):
-        return self._get(f"/games/{game_id}/screenshots").get("results", [])
+# Game ratings histogram
+if not df.empty:
+    fig = px.histogram(df, x="Rating", nbins=20, title="⭐ Rating Distribution of Games")
+    st.plotly_chart(fig, use_container_width=True)
+else:
+    st.warning("No data available for the selected filters.")
