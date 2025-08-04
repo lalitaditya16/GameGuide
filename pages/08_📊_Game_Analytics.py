@@ -1,84 +1,77 @@
 import streamlit as st
-from datetime import datetime
 import pandas as pd
+from datetime import datetime
+from collections import Counter
 import plotly.express as px
-from rawg_client import RAWGClient
+from rawg_client import RAWGClient  # ✅ Replaced import
 
 # Load RAWG API client
 api_key = st.secrets["RAWG_API_KEY"]
 rawg_client = RAWGClient(api_key)
 
-# Sidebar filters
-st.sidebar.header("🔎 Filters")
-selected_year = st.sidebar.selectbox("Select Year", list(range(2025, 2004, -1)), index=0)
-genres = rawg_client.get_genres()
-platforms = rawg_client.get_platforms()
+# Set page config
+st.set_page_config(page_title="Game Analytics", page_icon="📊", layout="wide")
+st.title("📊 Game Analytics Dashboard")
 
-genre_options = [g["name"] for g in genres]
-platform_options = [p["name"] for p in platforms]
+# Get current month range
+today = datetime.today()
+current_month_start = today.replace(day=1).strftime("%Y-%m-%d")
+current_month_end = today.strftime("%Y-%m-%d")
 
-genre_mapping = {g["name"]: g["id"] for g in genres}
-platform_mapping = {p["name"]: p["id"] for p in platforms}
-
-selected_genre = st.sidebar.selectbox("Select Genre", [None] + genre_options)
-selected_platform = st.sidebar.selectbox("Select Platform", [None] + platform_options)
-
-# Fetch data
-with st.spinner("Loading analytics data..."):
+# Fetch game data from RAWG API
+with st.spinner("Fetching latest game analytics..."):
     raw_data = rawg_client.search_games_analytics(
         ordering="-rating",
-        genres=genre_mapping.get(selected_genre),
-        platforms=platform_mapping.get(selected_platform),
-        year=selected_year,
+        dates=f"{current_month_start},{current_month_end}",
         page_size=40
     )
 
-# Convert to DataFrame
-data = []
+# Initialize lists to store genres, platforms, ratings
+genres_flat = []
+platforms_flat = []
+ratings = []
+
 for game in raw_data:
-    data.append({
-        "Name": game.get("name"),
-        "Released": game.get("released"),
-        "Rating": game.get("rating"),
-        "Playtime": game.get("playtime"),
-        "Genres": ", ".join([g["name"] for g in game.get("genres", [])]),
-        "Platforms": ", ".join([p["platform"]["name"] for p in game.get("platforms", []) if p.get("platform")]),
-    })
+    # Genres
+    if "genres" in game and game["genres"]:
+        genres_flat.extend([g["name"] for g in game["genres"] if "name" in g])
+    
+    # Platforms
+    if "platforms" in game and game["platforms"]:
+        platforms_flat.extend([
+            p["platform"]["name"]
+            for p in game["platforms"]
+            if p.get("platform") and p["platform"].get("name")
+        ])
+    
+    # Ratings
+    if "rating" in game and isinstance(game["rating"], (int, float)):
+        ratings.append(game["rating"])
 
-df = pd.DataFrame(data)
+# Count occurrences
+genre_counts = Counter(genres_flat)
+platform_counts = Counter(platforms_flat)
+rating_counts = Counter(ratings)
 
-# Page layout
-st.markdown("""
-    <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #36D1DC 0%, #5B86E5 100%); color: white; text-align: center; margin-bottom: 2rem;'>
-        <h2 style='margin: 0;'>📊 Game Analytics ({})</h2>
-        <p style='margin: 0.5rem 0;'>Explore top rated games and trends for {}{}</p>
-    </div>
-""".format(selected_year, selected_genre + " | " if selected_genre else "", selected_platform if selected_platform else ""), unsafe_allow_html=True)
+# Convert to DataFrames
+genre_df = pd.DataFrame(genre_counts.items(), columns=["Genre", "Count"]).sort_values(by="Count", ascending=False)
+platform_df = pd.DataFrame(platform_counts.items(), columns=["Platform", "Count"]).sort_values(by="Count", ascending=False)
+rating_df = pd.DataFrame(rating_counts.items(), columns=["Rating", "Count"]).sort_values(by="Rating")
 
-# Display table
-st.dataframe(df, use_container_width=True)
-
-# Visualizations
+# Layout with columns
 col1, col2 = st.columns(2)
 
 with col1:
-    if not df.empty:
-        top_genres = df["Genres"].str.split(", ").explode().value_counts().nlargest(10).reset_index()
-        top_genres.columns = ["Genre", "Count"]
-        fig = px.bar(top_genres, x="Count", y="Genre", orientation="h",
-                     title="🎮 Top Genres", color="Count", color_continuous_scale="Agsunset")
-        st.plotly_chart(fig, use_container_width=True)
+    st.subheader("🎮 Top Genres")
+    fig_genres = px.bar(genre_df.head(10), x="Count", y="Genre", orientation="h", color="Genre", height=400)
+    st.plotly_chart(fig_genres, use_container_width=True)
 
 with col2:
-    if not df.empty:
-        top_platforms = df["Platforms"].str.split(", ").explode().value_counts().nlargest(10).reset_index()
-        top_platforms.columns = ["Platform", "Count"]
-        fig = px.pie(top_platforms, values="Count", names="Platform", title="🕹️ Platform Distribution")
-        st.plotly_chart(fig, use_container_width=True)
+    st.subheader("🕹️ Platform Distribution")
+    fig_platforms = px.pie(platform_df, values="Count", names="Platform", hole=0.3, height=400)
+    st.plotly_chart(fig_platforms, use_container_width=True)
 
-# Game ratings histogram
-if not df.empty:
-    fig = px.histogram(df, x="Rating", nbins=20, title="⭐ Rating Distribution of Games")
-    st.plotly_chart(fig, use_container_width=True)
-else:
-    st.warning("No data available for the selected filters.")
+# Ratings distribution
+st.subheader("⭐ Rating Distribution of Games")
+fig_ratings = px.bar(rating_df, x="Rating", y="Count", color="Rating", height=400)
+st.plotly_chart(fig_ratings, use_container_width=True)
