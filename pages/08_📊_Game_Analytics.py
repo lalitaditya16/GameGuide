@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import datetime
 import pandas as pd
 import plotly.express as px
-from utils.rawg_client import RAWGClient
+from rawg_client import RAWGClient
 
 # Load RAWG API client
 api_key = st.secrets["RAWG_API_KEY"]
