@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime
 from rawg_client import RAWGClient
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 st.set_page_config(page_title="Game Analytics", page_icon="📊", layout="wide")
 
@@ -47,12 +48,18 @@ if not games_data:
     st.warning("No games found for the selected filters.")
     st.stop()
 
+# Raw API response sample (debug)
+st.write("Raw Sample", games_data[:3])
+
 # Data Preprocessing
 df = pd.DataFrame(games_data)
-
 df["release_date"] = pd.to_datetime(df["released"], errors="coerce")
 df["rating"] = df["rating"].fillna(0)
 df["name"] = df["name"].astype(str)
+
+# Debug: Show rating distribution
+st.write("Rating Value Distribution", df["rating"].describe())
+st.write("Sample Data", df[["name", "rating", "released"]].head(20))
 
 # Visualization 1: Ratings Distribution
 st.subheader("⭐ Game Ratings Distribution")
@@ -60,31 +67,17 @@ fig_rating = px.histogram(df, x="rating", nbins=20, title="Game Ratings Histogra
 st.plotly_chart(fig_rating, use_container_width=True)
 
 # Visualization 2: Top Rated Games
-# Visualization 2: Top Rated Games
+top_games = df[df["rating"] > 0].sort_values(by="rating", ascending=False).head(10)
 st.subheader("🏆 Top 10 Rated Games")
 
-# Filter out unrated games
-top_games = df[df["rating"] > 0].dropna(subset=["released"])
-top_games = top_games.sort_values(by="rating", ascending=False).head(10)
+# Build grid options
+gb = GridOptionsBuilder.from_dataframe(top_games[["name", "rating", "released"]])
+gb.configure_pagination(paginationAutoPageSize=True)
+gb.configure_default_column(wrapText=True, autoHeight=True)
+grid_options = gb.build()
 
-if top_games.empty:
-    st.warning("No rated games available to display.")
-else:
-    from st_aggrid import AgGrid, GridOptionsBuilder
-
-    gb = GridOptionsBuilder.from_dataframe(top_games[["name", "rating", "released"]])
-    gb.configure_pagination(paginationAutoPageSize=True)
-    gb.configure_default_column(wrapText=True, autoHeight=True)
-    grid_options = gb.build()
-
-    AgGrid(
-        top_games[["name", "rating", "released"]],
-        gridOptions=grid_options,
-        theme="material",
-        height=400,
-    )
-
-
+# Render interactive, styled table
+AgGrid(top_games[["name", "rating", "released"]], gridOptions=grid_options, theme="material", height=400)
 
 # Visualization 3: Release Timeline
 st.subheader("📅 Release Timeline")
@@ -97,7 +90,6 @@ st.plotly_chart(fig_timeline, use_container_width=True)
 # Visualization 4: Platform distribution
 st.subheader("🕹️ Platforms Distribution")
 platform_counts = {}
-
 for game in games_data:
     for platform in game.get("platforms", []):
         name = platform["platform"]["name"]
