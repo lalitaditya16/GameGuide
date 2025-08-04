@@ -17,7 +17,7 @@ load_dotenv()
 today = datetime.now().strftime("%B %d, %Y")
 # Page configuration
 st.set_page_config(
-    page_title="🎮 RAWG Gaming Database",
+    page_title="🎮 GameGuide",
     page_icon="🎮",
     layout="wide",
     initial_sidebar_state="expanded",
