@@ -60,18 +60,30 @@ fig_rating = px.histogram(df, x="rating", nbins=20, title="Game Ratings Histogra
 st.plotly_chart(fig_rating, use_container_width=True)
 
 # Visualization 2: Top Rated Games
-top_games = df.sort_values(by="rating", ascending=False).head(10)
+# Visualization 2: Top Rated Games
 st.subheader("🏆 Top 10 Rated Games")
-from st_aggrid import AgGrid, GridOptionsBuilder
 
-# Build grid options
-gb = GridOptionsBuilder.from_dataframe(top_games[["name", "rating", "released"]])
-gb.configure_pagination(paginationAutoPageSize=True)
-gb.configure_default_column(wrapText=True, autoHeight=True)
-grid_options = gb.build()
+# Filter out unrated games
+top_games = df[df["rating"] > 0].dropna(subset=["released"])
+top_games = top_games.sort_values(by="rating", ascending=False).head(10)
 
-# Render interactive, styled table
-AgGrid(top_games[["name", "rating", "released"]], gridOptions=grid_options, theme="material", height=400)
+if top_games.empty:
+    st.warning("No rated games available to display.")
+else:
+    from st_aggrid import AgGrid, GridOptionsBuilder
+
+    gb = GridOptionsBuilder.from_dataframe(top_games[["name", "rating", "released"]])
+    gb.configure_pagination(paginationAutoPageSize=True)
+    gb.configure_default_column(wrapText=True, autoHeight=True)
+    grid_options = gb.build()
+
+    AgGrid(
+        top_games[["name", "rating", "released"]],
+        gridOptions=grid_options,
+        theme="material",
+        height=400,
+    )
+
 
 
 # Visualization 3: Release Timeline
