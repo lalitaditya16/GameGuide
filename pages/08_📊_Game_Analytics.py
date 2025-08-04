@@ -9,7 +9,7 @@ st.set_page_config(page_title="Game Analytics", layout="wide")
 st.title("📊 Game Analytics")
 
 # Initialize RAWG API client
-rawg_client = RAWGClient()
+rawg_client = RAWGClient(api_key=st.secrets["RAWG_API_KEY"])
 
 # Fetch current month's top-rated games
 with st.spinner("Fetching top-rated games for this month..."):
