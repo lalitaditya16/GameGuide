@@ -95,13 +95,13 @@ def main():
     st.markdown("""
     <div style='text-align: center; padding: 2rem 0;'>
         <h1 style='color: #FF6B6B; font-size: 3rem; margin: 0;'>
-            🎮 RAWG Gaming Database Explorer
+            🎮 GAMEGUIDE
         </h1>
         <p style='font-size: 1.2rem; color: #666; margin-top: 0.5rem;'>
             Discover, explore, and analyze the world's largest video game database
         </p>
         <p style='font-size: 1rem; color: #888; margin-top: 0.25rem;'>
-            ✨ Now with AI-powered gaming assistant using Groq + Gemma2-9B
+            ✨ Now with AI-powered gaming assistant using Groq + Gemma2-9B and the RAWG database
         </p>
     </div>
     """, unsafe_allow_html=True)
