@@ -163,11 +163,14 @@ def main():
             <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-align: center; margin-bottom: 1rem;'>
                 <h3 style='margin: 0; font-size: 1.5rem;'>📊 Analytics</h3>
                 <p style='margin: 0.5rem 0;'>Dive into gaming trends, statistics, and interactive visualizations</p>
-            </div>
-            """, unsafe_allow_html=True)
+        </div>
+        <a href="/📊_Game_Analytics" target="_self">
+            <button style='width: 100%; padding: 0.75rem; border: none; border-radius: 8px; background-color: white; color: #f5576c; font-weight: bold; font-size: 1rem; cursor: pointer;'>
+                📊 View Analytics
+            </button>
+        </a>
+        """, unsafe_allow_html=True)
 
-            if st.button("📊 View Analytics", key="view_analytics", use_container_width=True):
-                st.info("📝 Create pages/08_📊_Game_Analytics.py to enable analytics")
 
     with feature_col3:
         with st.container():
