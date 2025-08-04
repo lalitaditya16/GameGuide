@@ -72,3 +72,4 @@ types-requests
 click
 tqdm
 urllib3
+streamlit-aggrid
