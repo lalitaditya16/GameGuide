@@ -164,7 +164,7 @@ def main():
                 <h3 style='margin: 0; font-size: 1.5rem;'>📊 Analytics</h3>
                 <p style='margin: 0.5rem 0;'>Dive into gaming trends, statistics, and interactive visualizations</p>
         </div>
-        <a href="/08_📊_Game_Analytics" target="_self">
+        <a href="/_📊_Game_Analytics" target="_self">
             <button style='width: 100%; padding: 0.75rem; border: none; border-radius: 8px; background-color: white; color: #f5576c; font-weight: bold; font-size: 1rem; cursor: pointer;'>
                 📊 View Analytics
             </button>
