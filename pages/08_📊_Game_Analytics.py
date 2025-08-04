@@ -16,7 +16,7 @@ with st.spinner("Fetching top-rated games for this month..."):
     current_month_start = f"{datetime.now().year}-{datetime.now().month:02d}-01"
     current_month_end = f"{datetime.now().year}-{datetime.now().month:02d}-31"
 
-    raw_data = rawg_client.search_games(
+    raw_data = rawg_client.search_games_analytics(
         ordering="-rating",
         dates=f"{current_month_start},{current_month_end}",
         page_size=20
