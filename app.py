@@ -278,7 +278,7 @@ def main():
         st.error("Error loading popular games:")
         st.exception(e)
 
-
+    nav_col1, nav_col2 = st.columns([1, 5])
     with nav_col1:
         st.markdown("""
         **🎮 Game Discovery:**
