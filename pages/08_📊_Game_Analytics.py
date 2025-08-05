@@ -76,7 +76,7 @@ try:
             genre_counts = pd.Series([g for genres in df["Genres"] for g in genres]).value_counts()
             top_genres = genre_counts.head(5)
             other_count = genre_counts[5:].sum()
-            genre_display = top_genres.append(pd.Series({"Others": other_count})) if other_count > 0 else top_genres
+            genre_display = pd.concat([top_genres, pd.Series({"Others": other_count})]) if other_count > 0 else top_genres
 
             fig2, ax2 = plt.subplots()
             ax2.pie(genre_display, labels=genre_display.index, autopct="%1.1f%%", startangle=140)
