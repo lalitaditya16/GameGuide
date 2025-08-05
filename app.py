@@ -240,57 +240,44 @@ def main():
             """)
 
     # Recent popular games preview
-    st.subheader("🔥 Popular Games This Month")
-
     try:
-        # Fetch popular games
-        with st.spinner("Loading popular games..."):
-            current_month = datetime.now().strftime("%Y-%m")
-            start_date = f"{current_month}-01"
-            end_date = f"{current_month}-31"
+        st.subheader("🔥 Popular Games This Month")
 
-            popular_games = rawg_client.search_games_popular(
-            ordering="-rating",
+    # Get current month date range
+        from datetime import datetime
+        today = datetime.today()
+        start_date = today.replace(day=1).strftime("%Y-%m-%d")
+        end_date = today.strftime("%Y-%m-%d")
+
+        popular_games = rawg_client.search_games_popular(
+            ordering="-added",
             dates=f"{start_date},{end_date}",
             page_size=6
         )
 
-        if popular_games and popular_games.get('results'):
-            games_cols = st.columns(3)
+        for game in popular_games:
+            name = game.get("name")
+            rating = game.get("rating")
+            released = game.get("released")
+            platforms = game.get("platforms", [])
+            genres = game.get("genres", [])
+            image = game.get("background_image")
 
-            for idx, game in enumerate(popular_games['results'][:6]):
-                col_idx = idx % 3
+            st.markdown(f"### 🎮 {name}")
+            st.write(f"⭐ Rating: {rating}")
+            st.write(f"📅 Released: {released}")
+            st.write(f"🧩 Platforms: {', '.join(platforms)}")
+            st.write(f"🏷️ Genres: {', '.join(genres)}")
 
-                with games_cols[col_idx]:
-                    # Game card
-                    st.markdown(f"""
-                    <div style='border: 1px solid #ddd; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; background: white;'>
-                        <h4 style='margin: 0 0 0.5rem 0; color: #333;'>{game.get('name', 'Unknown')}</h4>
-                        <p style='margin: 0; color: #666; font-size: 0.9rem;'>
-                            ⭐ Rating: {game.get('rating', 'N/A')}/5<br>
-                            📅 Released: {game.get('released', 'TBA')}<br>
-                            🎯 Genres: {', '.join([g['name'] for g in game.get('genres', [])][:2])}
-                        </p>
-                    </div>
-                    """, unsafe_allow_html=True)
+        i    f image:
+                st.image(image, width=600)
 
-                    # AI analysis button (if available)
-                    if chat_manager.is_available():
-                        if st.button(f"🤖 AI Analysis", key=f"analyze_{game.get('id')}"):
-                            with st.spinner("Analyzing game..."):
-                                analysis = chat_manager.analyze_game(game)
-                            st.info(f"🤖 **AI Analysis:**\n{analysis[:300]}...")
-        else:
-            st.info("Unable to load popular games at the moment. Please try again later.")
+            st.markdown("---")
 
     except Exception as e:
-        st.error(f"Error loading popular games: {str(e)}")
+        st.error("Error loading popular games:")
+        st.exception(e)
 
-    # Navigation help
-    st.markdown("---")
-    st.subheader("🧭 Getting Started")
-
-    nav_col1, nav_col2 = st.columns(2)
 
     with nav_col1:
         st.markdown("""
