@@ -152,10 +152,13 @@ def main():
                 <h3 style='margin: 0; font-size: 1.5rem;'>🎮 Browse Games</h3>
                 <p style='margin: 0.5rem 0;'>Explore our vast collection of games with advanced search and filtering</p>
             </div>
+            <a href="/🎮_Browse_Games" target="_self">
+                <button style='width: 100%; padding: 0.75rem; border: none; border-radius: 8px; background-color: white; color: #764ba2; font-weight: bold; font-size: 1rem; cursor: pointer;'>
+                    🎮 Start Browsing
+                </button>
+            </a>
             """, unsafe_allow_html=True)
-
-            if st.button("🎮 Start Browsing", key="browse_games", use_container_width=True):
-                st.info("📝 Create pages/01_🎮_Browse_Games.py to enable game browsing")
+           
 
     with feature_col2:
         with st.container():
