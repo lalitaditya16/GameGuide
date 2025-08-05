@@ -145,17 +145,15 @@ def main():
     # Create feature cards
     feature_col1, feature_col2, feature_col3, feature_col4 = st.columns(4)
 
-    with feature_col1:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🎮 Browse Games</h3>
-                <p style='margin: 0.5rem 0;'>Explore our vast collection of games with advanced search and filtering</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            if st.button("🎮 Start Browsing", key="browse_games", use_container_width=True):
-                st.info("📝 Create pages/01_🎮_Browse_Games.py to enable game browsing")
+    
+    with col1:
+        st.markdown("""
+        <a href="/🎮_Browse_Games" target="_self">
+            <button style='width: 100%; padding: 0.75rem; border: none; border-radius: 8px; background-color: white; color: #764ba2; font-weight: bold; font-size: 1rem; cursor: pointer;'>
+                🎮 Start Browsing
+            </button>
+        </a>
+        """, unsafe_allow_html=True)
 
     with feature_col2:
         with st.container():
