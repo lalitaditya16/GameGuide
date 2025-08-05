@@ -269,7 +269,7 @@ def main():
             st.write(f"🧩 Platforms: {', '.join(platforms)}")
             st.write(f"🏷️ Genres: {', '.join(genres)}")
 
-        i    f image:
+            if image:
                 st.image(image, width=600)
 
             st.markdown("---")
