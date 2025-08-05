@@ -241,12 +241,13 @@ def main():
 
     # Recent popular games preview
     try:
-        st.subheader("🔥 Popular Games This Month")
+        st.subheader("🔥 Trending games")
 
     # Get current month date range
         from datetime import datetime
         today = datetime.today()
-        start_date = today.replace(day=1).strftime("%Y-%m-%d")
+        three_months_ago = today - timedelta(days=90)
+        start_date = three_months_ago.strftime("%Y-%m-%d")
         end_date = today.strftime("%Y-%m-%d")
 
         popular_games = rawg_client.search_games_popular(
