@@ -250,7 +250,7 @@ def main():
         end_date = today.strftime("%Y-%m-%d")
 
         popular_games = rawg_client.search_games_popular(
-            ordering="-added",
+            ordering="-rating",
             dates=f"{start_date},{end_date}",
             page_size=6
         )
