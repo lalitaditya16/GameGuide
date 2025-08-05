@@ -13,6 +13,12 @@ st.title("📊 Game Analytics Dashboard")
 # Current year
 current_year = datetime.now().year
 
+# --- Detect Theme ---
+theme = st.get_option("theme.base")
+is_dark = theme == "dark"
+bg_color = "#0e1117" if is_dark else "#ffffff"
+text_color = "#ffffff" if is_dark else "#000000"
+
 # --- Caching Genre & Platform API calls ---
 @st.cache_data
 def load_genres():
@@ -64,10 +70,14 @@ try:
             # --- Ratings Chart ---
             st.markdown("### 📈 Game Ratings")
             top_ratings = df.sort_values("Rating", ascending=False).head(10)
-            fig, ax = plt.subplots()
-            ax.barh(top_ratings["Name"], top_ratings["Rating"])
-            ax.set_xlabel("Rating")
-            ax.set_ylabel("Game")
+            fig, ax = plt.subplots(facecolor=bg_color)
+            fig.patch.set_facecolor(bg_color)
+            ax.set_facecolor(bg_color)
+
+            ax.barh(top_ratings["Name"], top_ratings["Rating"], color="skyblue")
+            ax.set_xlabel("Rating", color=text_color)
+            ax.set_ylabel("Game", color=text_color)
+            ax.tick_params(colors=text_color)
             ax.invert_yaxis()
             st.pyplot(fig)
 
@@ -78,19 +88,33 @@ try:
             other_count = genre_counts[5:].sum()
             genre_display = pd.concat([top_genres, pd.Series({"Others": other_count})]) if other_count > 0 else top_genres
 
-            fig2, ax2 = plt.subplots()
-            ax2.pie(genre_display, labels=genre_display.index, autopct="%1.1f%%", startangle=140)
+            fig2, ax2 = plt.subplots(facecolor=bg_color)
+            fig2.patch.set_facecolor(bg_color)
+            ax2.set_facecolor(bg_color)
+            wedges, texts, autotexts = ax2.pie(
+                genre_display,
+                labels=genre_display.index,
+                autopct="%1.1f%%",
+                startangle=140,
+                textprops={"color": text_color}
+            )
+            for text in texts:
+                text.set_color(text_color)
             ax2.axis("equal")
             st.pyplot(fig2)
 
             # --- Platform Usage ---
             st.markdown("### 🖥 Platform Popularity")
             platform_counts = pd.Series([p for platforms in df["Platforms"] for p in platforms]).value_counts()
-            fig3, ax3 = plt.subplots()
-            ax3.bar(range(len(platform_counts.index)), platform_counts.values)
-            ax3.set_ylabel("Count")
+            fig3, ax3 = plt.subplots(facecolor=bg_color)
+            fig3.patch.set_facecolor(bg_color)
+            ax3.set_facecolor(bg_color)
+
+            ax3.bar(range(len(platform_counts.index)), platform_counts.values, color="lightgreen")
+            ax3.set_ylabel("Count", color=text_color)
             ax3.set_xticks(range(len(platform_counts.index)))
-            ax3.set_xticklabels(platform_counts.index, rotation=45, ha="right")
+            ax3.set_xticklabels(platform_counts.index, rotation=45, ha="right", color=text_color)
+            ax3.tick_params(colors=text_color)
             st.pyplot(fig3)
 
             # --- Download CSV ---
