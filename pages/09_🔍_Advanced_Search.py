@@ -21,13 +21,12 @@ st.markdown("Search for a game and explore its **achievements** and **screenshot
 game_name = st.text_input("Enter a game name")
 
 if game_name:
-    with st.spinner("Searching for game..."):
-        search_results = rawg_client.search_games_browse(query=game_name, page_size=1)
+    with st.spinner("Searching for best match..."):
+        game = rawg_client.search_best_match(game_name)
 
-    if not search_results:
+    if not game:
         st.warning("No game found with that name.")
     else:
-        game = search_results[0]
         game_id = game.get("id")
 
         # --- Game Info ---
@@ -43,7 +42,7 @@ if game_name:
         # --- Achievements ---
         st.subheader("🏆 Achievements")
         with st.spinner("Loading achievements..."):
-            achievements = rawg_client.get_achievements_by_game_name(game_name)
+            achievements = rawg_client.get_achievements_by_game_name(game['name'])
 
         if achievements:
             for ach in achievements:
