@@ -1,5 +1,6 @@
 import streamlit as st
 from rawg_client import RAWGClient
+from helpers import clean_description
 
 st.set_page_config(page_title="Advanced Game Search", layout="wide")
 st.title("🔍 Advanced Game Search")
