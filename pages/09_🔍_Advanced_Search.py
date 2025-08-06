@@ -24,6 +24,27 @@ if game_name:
         st.markdown(f"**Genres:** {', '.join([genre['name'] for genre in game.get('genres', [])])}")
         st.markdown(f"**Platforms:** {', '.join([platform['platform']['name'] for platform in game.get('platforms', [])])}")
 
+        # Get full game details
+        game_details = client.get_game_details(game['id'])
+
+        if game_details:
+            st.subheader("📖 Game Details")
+
+            description = game_details.get("description_raw", "No description available.")
+            developers = ', '.join([dev['name'] for dev in game_details.get('developers', [])])
+            publishers = ', '.join([pub['name'] for pub in game_details.get('publishers', [])])
+            website = game_details.get('website', '')
+            esrb = game_details.get('esrb_rating', {}).get('name', 'N/A')
+
+            st.markdown(f"**Description:** {description}")
+            if developers:
+                st.markdown(f"**Developer(s):** {developers}")
+            if publishers:
+                st.markdown(f"**Publisher(s):** {publishers}")
+            st.markdown(f"**ESRB Rating:** {esrb}")
+            if website:
+                st.markdown(f"**Website:** [Visit Official Site]({website})")
+
         # Screenshots
         screenshots = client.get_game_screenshots(game['id'])
         if screenshots:
