@@ -17,6 +17,7 @@ from langchain_core.output_parsers import StrOutputParser
 import json
 import logging
 from datetime import datetime
+import re
 
 # Import configurations
 from config import config, SESSION_KEYS, ERROR_MESSAGES, SUCCESS_MESSAGES, AI_PROMPTS, CUSTOM_CSS
