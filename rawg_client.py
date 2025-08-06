@@ -135,6 +135,16 @@ class RAWGClient:
         return None
 
     def get_achievements_by_game_id(self, game_id):
-        endpoint = f"/games/{game_id}/achievements"
-        data = self._get(endpoint)
-        return data.get("results", [])
+        achievements = []
+        page = 1
+        while True:
+            data = self._get(f"/games/{game_id}/achievements", params={"page": page})
+            achievements.extend(data.get("results", []))
+
+            # Check if there are more pages
+            if data.get("next"):
+                page += 1
+            else:
+                break
+
+        return achievements
