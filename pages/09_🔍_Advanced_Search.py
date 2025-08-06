@@ -25,11 +25,12 @@ if game_name:
         st.markdown(f"**Platforms:** {', '.join([platform['platform']['name'] for platform in game.get('platforms', [])])}")
 
         # Screenshots
-        screenshots = client.get_game_screenshots(game['id'])
+        screenshots = client.get_screenshots(game['id'])
         if screenshots:
             st.subheader("🖼️ Screenshots")
-            for url in screenshots:
-                if url and url.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+            for shot in screenshots:
+                url = shot.get("image")
+                if isinstance(url, str) and url.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
                     st.image(url, use_column_width=True)
                 else:
                     st.warning(f"Skipped invalid image URL: {url}")
