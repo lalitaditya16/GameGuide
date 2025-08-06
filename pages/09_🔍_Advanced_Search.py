@@ -35,33 +35,51 @@ if game_name:
                 else:
                     st.warning(f"Skipped invalid image URL: {url}")
 
-        # Achievements in columns (show all, sorted by rarity)
+        # Achievements
         achievements = client.get_achievements_by_game_id(game['id'])
-        if achievements:
+
+        with st.expander("🔧 Raw Achievements Debug"):
+            st.write(achievements)
+
+        if achievements and isinstance(achievements, list):
             st.subheader("🏆 All Achievements")
 
-            # Filter and sort by rarity (lower percent = rarer)
+            # Filter and sort by rarity
             filtered_achievements = [
                 ach for ach in achievements
-                if isinstance(ach.get("percent"), (int, float))
+                if ach.get("name") and isinstance(ach.get("percent"), (int, float))
             ]
-            filtered_achievements.sort(key=lambda x: x.get("percent", 100))
+            filtered_achievements.sort(key=lambda x: x["percent"])
 
-            cols = st.columns(3)
-            for i, ach in enumerate(filtered_achievements):
-                with cols[i % 3]:
-                    st.markdown(f"**{ach['name']}**")
-                    st.caption(ach.get('description', 'No description'))
+            if filtered_achievements:
+                has_images = any(
+                    isinstance(ach.get("image"), str) and ach["image"].lower().endswith((".png", ".jpg", ".jpeg", ".webp"))
+                    for ach in filtered_achievements
+                )
 
-                    percent = ach.get('percent')
-                    if isinstance(percent, (int, float)):
-                        st.caption(f"Unlocked by {percent:.2f}% of players")
-                    else:
-                        st.caption("Unlock percentage not available")
+                if has_images:
+                    cols = st.columns(3)
+                    for i, ach in enumerate(filtered_achievements):
+                        with cols[i % 3]:
+                            st.markdown(f"**{ach['name']}**")
+                            st.caption(ach.get('description', 'No description'))
+                            st.caption(f"Unlocked by {ach['percent']:.2f}% of players")
 
-                    img = ach.get("image")
-                    if isinstance(img, str) and img.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
-                        st.image(img, width=80)
+                            img = ach.get("image")
+                            if img and isinstance(img, str) and img.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+                                st.image(img, width=80)
+                else:
+                    st.info("No achievement images found. Showing in table format.")
+                    st.dataframe([
+                        {
+                            "Name": ach.get("name"),
+                            "Description": ach.get("description", ""),
+                            "Unlocked %": f"{ach.get('percent', 0):.2f}"
+                        }
+                        for ach in filtered_achievements
+                    ])
+            else:
+                st.warning("✅ No valid achievements found after filtering.")
         else:
             st.info("No achievements available for this game.")
     else:
