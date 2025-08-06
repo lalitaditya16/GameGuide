@@ -1,4 +1,5 @@
 import streamlit as st
+import matplotlib.pyplot as plt
 from rawg_client import RAWGClient
 
 st.set_page_config(page_title="Advanced Game Search", layout="wide")
@@ -23,6 +24,8 @@ if game_name:
         st.markdown(f"**Rating:** {game.get('rating', 'N/A')} / 5 ({game.get('ratings_count', 0)} ratings)")
         st.markdown(f"**Genres:** {', '.join([genre['name'] for genre in game.get('genres', [])])}")
         st.markdown(f"**Platforms:** {', '.join([platform['platform']['name'] for platform in game.get('platforms', [])])}")
+        st.markdown(f"**Metacritic:** {game.get('metacritic', 'N/A')}")
+        st.markdown(f"**Tags:** {', '.join([tag['name'] for tag in game.get('tags', [])[:5]])}")
 
         # Screenshots
         screenshots = client.get_game_screenshots(game['id'])
@@ -44,7 +47,6 @@ if game_name:
         if achievements and isinstance(achievements, list):
             st.subheader("🏆 All Achievements")
 
-            # Fix percent if it's a string
             for ach in achievements:
                 percent = ach.get("percent")
                 try:
@@ -52,7 +54,6 @@ if game_name:
                 except (ValueError, TypeError):
                     ach["percent"] = None
 
-            # Filter and sort by rarity
             filtered_achievements = [
                 ach for ach in achievements
                 if ach.get("name") and isinstance(ach.get("percent"), (int, float))
@@ -83,6 +84,28 @@ if game_name:
                         }
                         for ach in filtered_achievements
                     ])
+
+                # Pie Chart Visualization
+                st.subheader("📊 Unlock Rate Distribution")
+                buckets = {"<5%": 0, "5-25%": 0, "25-75%": 0, ">75%": 0}
+                for ach in filtered_achievements:
+                    p = ach["percent"]
+                    if p < 5:
+                        buckets["<5%"] += 1
+                    elif p < 25:
+                        buckets["5-25%"] += 1
+                    elif p < 75:
+                        buckets["25-75%"] += 1
+                    else:
+                        buckets[">75%"] += 1
+
+                labels = list(buckets.keys())
+                sizes = list(buckets.values())
+                fig, ax = plt.subplots()
+                ax.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90)
+                ax.axis("equal")
+                st.pyplot(fig)
+
             else:
                 st.warning("✅ No valid achievements found after filtering.")
         else:
