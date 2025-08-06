@@ -35,27 +35,37 @@ if game_name:
                 else:
                     st.warning(f"Skipped invalid image URL: {url}")
 
-        # Achievements in columns
+        # Achievements in columns (updated)
         achievements = client.get_achievements_by_game_id(game['id'])
         if achievements:
-            st.subheader("🏆 Achievements")
+            st.subheader("🏆 Top Achievements")
+
+            # Filter and sort by rarity (lower percent = rarer)
+            filtered_achievements = [
+                ach for ach in achievements
+                if isinstance(ach.get("percent"), (int, float))
+            ]
+            filtered_achievements.sort(key=lambda x: x.get("percent", 100))
+
+            # Slider to control how many top achievements to display
+            top_n = st.slider("How many achievements to show?", 3, min(30, len(filtered_achievements)), 9)
+            top_achievements = filtered_achievements[:top_n]
+
             cols = st.columns(3)
-            for i, ach in enumerate(achievements):
+            for i, ach in enumerate(top_achievements):
                 with cols[i % 3]:
                     st.markdown(f"**{ach['name']}**")
                     st.caption(ach.get('description', 'No description'))
 
                     percent = ach.get('percent')
-                    try:
-                        percent_val = float(percent)
-                        st.caption(f"Unlocked by {percent_val:.2f}% of players")
-                    except (TypeError, ValueError):
+                    if isinstance(percent, (int, float)):
+                        st.caption(f"Unlocked by {percent:.2f}% of players")
+                    else:
                         st.caption("Unlock percentage not available")
 
                     img = ach.get("image")
                     if isinstance(img, str) and img.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
                         st.image(img, width=80)
-
         else:
             st.info("No achievements available for this game.")
     else:
