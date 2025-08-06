@@ -25,7 +25,7 @@ if game_name:
         st.markdown(f"**Platforms:** {', '.join([platform['platform']['name'] for platform in game.get('platforms', [])])}")
 
         # Screenshots
-        screenshots = client.get_screenshots(game['id'])
+        screenshots = client.get_game_screenshots(game['id'])
         if screenshots:
             st.subheader("🖼️ Screenshots")
             for shot in screenshots:
