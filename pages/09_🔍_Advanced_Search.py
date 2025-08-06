@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Load your RAWG API key from .env
-API_KEY = st.secrets("RAWG_API_KEY")
+API_KEY = st.secretsp["RAWG_API_KEY"]
 
 # Initialize client
 rawg_client = RAWGClient(API_KEY)
