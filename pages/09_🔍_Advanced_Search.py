@@ -44,6 +44,14 @@ if game_name:
         if achievements and isinstance(achievements, list):
             st.subheader("🏆 All Achievements")
 
+            # Fix percent if it's a string
+            for ach in achievements:
+                percent = ach.get("percent")
+                try:
+                    ach["percent"] = float(percent)
+                except (ValueError, TypeError):
+                    ach["percent"] = None
+
             # Filter and sort by rarity
             filtered_achievements = [
                 ach for ach in achievements
@@ -61,13 +69,10 @@ if game_name:
                     cols = st.columns(3)
                     for i, ach in enumerate(filtered_achievements):
                         with cols[i % 3]:
+                            st.image(ach.get("image"), width=80)
                             st.markdown(f"**{ach['name']}**")
                             st.caption(ach.get('description', 'No description'))
                             st.caption(f"Unlocked by {ach['percent']:.2f}% of players")
-
-                            img = ach.get("image")
-                            if img and isinstance(img, str) and img.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
-                                st.image(img, width=80)
                 else:
                     st.info("No achievement images found. Showing in table format.")
                     st.dataframe([
