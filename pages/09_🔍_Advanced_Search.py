@@ -11,7 +11,7 @@ game_name = st.text_input("Enter a game name")
 
 if game_name:
     with st.spinner("Searching for game..."):
-        game = client.search_game(game_name)
+        game = client.search_best_match(game_name)
 
     if game:
         st.subheader(game['name'])
@@ -25,7 +25,7 @@ if game_name:
         st.markdown(f"**Platforms:** {', '.join([platform['platform']['name'] for platform in game.get('platforms', [])])}")
 
         # Screenshots
-        screenshots = client.get_screenshots(game['id'])
+        screenshots = client.get_game_screenshots(game['id'])
         if screenshots:
             st.subheader("🖼️ Screenshots")
             for url in screenshots:
