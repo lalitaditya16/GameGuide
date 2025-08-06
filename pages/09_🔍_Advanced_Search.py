@@ -38,8 +38,7 @@ if game_name:
         # Achievements
         achievements = client.get_achievements_by_game_id(game['id'])
 
-        with st.expander("🔧 Raw Achievements Debug"):
-            st.write(achievements)
+        
 
         if achievements and isinstance(achievements, list):
             st.subheader("🏆 All Achievements")
