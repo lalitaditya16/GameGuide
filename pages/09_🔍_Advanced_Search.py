@@ -35,23 +35,27 @@ if game_name:
                 else:
                     st.warning(f"Skipped invalid image URL: {url}")
 
-        # Achievements
+        # Achievements in columns
         achievements = client.get_achievements_by_game_id(game['id'])
         if achievements:
             st.subheader("🏆 Achievements")
-            for ach in achievements:
-                st.markdown(f"**{ach['name']}** — {ach.get('description', 'No description')}")
+            cols = st.columns(3)
+            for i, ach in enumerate(achievements):
+                with cols[i % 3]:
+                    st.markdown(f"**{ach['name']}**")
+                    st.caption(ach.get('description', 'No description'))
 
-                percent = ach.get('percent')
-                if percent is not None:
-                    st.caption(f"Unlocked by {percent:.2f}% of players")
-                else:
-                    st.caption("Unlock percentage not available")
+                    percent = ach.get('percent')
+                    try:
+                        percent_val = float(percent)
+                        st.caption(f"Unlocked by {percent_val:.2f}% of players")
+                    except (TypeError, ValueError):
+                        st.caption("Unlock percentage not available")
 
-                if ach.get("image") and ach["image"].lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
-                    st.image(ach["image"], width=80)
+                    img = ach.get("image")
+                    if isinstance(img, str) and img.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+                        st.image(img, width=80)
 
-                st.markdown("---")
         else:
             st.info("No achievements available for this game.")
     else:
