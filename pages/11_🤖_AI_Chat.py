@@ -73,9 +73,7 @@ if prompt := st.chat_input("Ask about 2025 games..."):
                     # Build system prompt dynamically
                     SYSTEM_PROMPT = (
                         f"Today's date is {today}. You are a helpful and concise gaming assistant. "
-                        "The current year is **2025** — always assume that when answering. "
-                        "Never refer to the year as 2023 or 2024 unless speaking in the past tense. "
-                        "Always say things like 'As of 2025' or 'Currently in 2025' when answering. "
+                        "Try to explain the game mechanics,a basic synopsis of the plot without spoiling any key elements "
                         "Be confident and factual. Do not hedge or speculate unnecessarily."
                     )
 
