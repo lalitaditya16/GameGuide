@@ -38,8 +38,6 @@ if game_name:
         # Achievements
         achievements = client.get_achievements_by_game_id(game['id'])
 
-        
-
         if achievements and isinstance(achievements, list):
             st.subheader("🏆 All Achievements")
 
@@ -51,20 +49,25 @@ if game_name:
                 except (ValueError, TypeError):
                     ach["percent"] = None
 
-            # Show all achievements regardless of percent value
             for ach in achievements:
+                cols = st.columns([1, 6])  # [image column, info column]
+                image = ach.get("image")
                 name = ach.get("name")
                 description = ach.get("description", "No description")
                 percent = ach.get("percent")
-                image = ach.get("image")
 
-                if image and isinstance(image, str) and image.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
-                    st.image(image, width=80)
+                with cols[0]:
+                    if image and isinstance(image, str) and image.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+                        st.image(image, width=64)
+                    else:
+                        st.empty()
 
-                st.markdown(f"**{name}**")
-                st.caption(description)
-                if percent is not None:
-                    st.caption(f"Unlocked by {percent:.2f}% of players")
+                with cols[1]:
+                    st.markdown(f"**{name}**")
+                    st.caption(description)
+                    if percent is not None:
+                        st.caption(f"Unlocked by {percent:.2f}% of players")
+
                 st.markdown("---")
         else:
             st.info("No achievements available for this game.")
