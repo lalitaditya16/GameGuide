@@ -24,7 +24,10 @@ from config import config, SESSION_KEYS, ERROR_MESSAGES, SUCCESS_MESSAGES, AI_PR
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
+def clean_description(text):
+    # Replace headings like "###Setting" or "### Characters" with bold text
+    cleaned = re.sub(r"###\s*(\w+)", r"**\1:**", text)
+    return cleaned
 def init_session_state():
     """Initialize Streamlit session state variables."""
 
