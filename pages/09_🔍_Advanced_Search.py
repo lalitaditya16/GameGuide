@@ -36,7 +36,7 @@ if game_name:
                     st.warning(f"Skipped invalid image URL: {url}")
 
         # Achievements
-        achievements = client.get_achievements(game['id'])
+        achievements = client.get_achievements_by_game_id(game['id'])
         if achievements:
             st.subheader("🏆 Achievements")
             for ach in achievements:
