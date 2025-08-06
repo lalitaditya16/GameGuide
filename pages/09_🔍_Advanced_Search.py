@@ -1,6 +1,5 @@
 import streamlit as st
 from rawg_client import RAWGClient
-from helpers import clean_description
 
 st.set_page_config(page_title="Advanced Game Search", layout="wide")
 st.title("🔍 Advanced Game Search")
@@ -31,12 +30,14 @@ if game_name:
         if game_details:
             st.subheader("📖 Game Details")
 
-            raw_description = game_details.get("description_raw", "No description available.")
-            description = clean_description(raw_description)
+            description = game_details.get("description_raw", "No description available.")
             developers = ', '.join([dev['name'] for dev in game_details.get('developers', [])])
             publishers = ', '.join([pub['name'] for pub in game_details.get('publishers', [])])
             website = game_details.get('website', '')
-            esrb = game_details.get('esrb_rating', {}).get('name', 'N/A')
+
+            # Safely access ESRB info
+            esrb_data = game_details.get('esrb_rating')
+            esrb = esrb_data.get('name') if isinstance(esrb_data, dict) else 'N/A'
 
             st.markdown(f"**Description:** {description}")
             if developers:
@@ -64,7 +65,6 @@ if game_name:
         if achievements and isinstance(achievements, list):
             st.subheader("🏆 All Achievements")
 
-            # Fix percent if it's a string
             for ach in achievements:
                 percent = ach.get("percent")
                 try:
@@ -73,7 +73,7 @@ if game_name:
                     ach["percent"] = None
 
             for ach in achievements:
-                cols = st.columns([1, 6])  # [image column, info column]
+                cols = st.columns([1, 6])
                 image = ach.get("image")
                 name = ach.get("name")
                 description = ach.get("description", "No description")
