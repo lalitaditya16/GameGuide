@@ -24,11 +24,6 @@ if game_name:
         st.markdown(f"**Genres:** {', '.join([genre['name'] for genre in game.get('genres', [])])}")
         st.markdown(f"**Platforms:** {', '.join([platform['platform']['name'] for platform in game.get('platforms', [])])}")
 
-        # Game Description
-        game_details = client.get_game_by_id(game['id'])
-        description = game_details.get("description_raw", "No description available.")
-        st.markdown(f"**Description:**\n\n{description}")
-
         # Screenshots
         screenshots = client.get_game_screenshots(game['id'])
         if screenshots:
@@ -54,21 +49,25 @@ if game_name:
                 except (ValueError, TypeError):
                     ach["percent"] = None
 
-            # Show all achievements in a bulleted list
             for ach in achievements:
+                cols = st.columns([1, 6])  # [image column, info column]
+                image = ach.get("image")
                 name = ach.get("name")
                 description = ach.get("description", "No description")
                 percent = ach.get("percent")
-                image = ach.get("image")
 
-                with st.container():
-                    cols = st.columns([1, 9])
+                with cols[0]:
                     if image and isinstance(image, str) and image.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
-                        cols[0].image(image, width=60)
-                    cols[1].markdown(f"**{name}**")
-                    cols[1].caption(description)
+                        st.image(image, width=64)
+                    else:
+                        st.empty()
+
+                with cols[1]:
+                    st.markdown(f"**{name}**")
+                    st.caption(description)
                     if percent is not None:
-                        cols[1].caption(f"Unlocked by {percent:.2f}% of players")
+                        st.caption(f"Unlocked by {percent:.2f}% of players")
+
                 st.markdown("---")
         else:
             st.info("No achievements available for this game.")
