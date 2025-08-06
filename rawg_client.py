@@ -96,3 +96,21 @@ class RAWGClient:
 
     def get_game_screenshots(self, game_id):
         return self._get(f"/games/{game_id}/screenshots").get("results", [])
+
+    def get_achievements_by_game_name(self, game_name, page_size=40):
+        """Search for a game by name and fetch its achievements."""
+    # Step 1: Search for the game
+        search_results = self.search_games_browse(query=game_name, page_size=1)
+        if not search_results:
+            return []
+
+        game_id = search_results[0]["id"]
+
+    # Step 2: Fetch achievements using the game ID
+        params = {
+            "key": self.api_key,
+            "page_size": page_size
+        }
+        response = requests.get(f"{self.BASE_URL}/games/{game_id}/achievements", params=params)
+        response.raise_for_status()
+        return response.json().get("results", [])
