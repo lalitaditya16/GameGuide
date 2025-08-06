@@ -30,7 +30,8 @@ if game_name:
         if game_details:
             st.subheader("📖 Game Details")
 
-            description = game_details.get("description_raw", "No description available.")
+            raw_description = game_details.get("description_raw", "No description available.")
+            description = clean_description(raw_description)
             developers = ', '.join([dev['name'] for dev in game_details.get('developers', [])])
             publishers = ', '.join([pub['name'] for pub in game_details.get('publishers', [])])
             website = game_details.get('website', '')
