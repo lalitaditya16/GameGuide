@@ -11,7 +11,7 @@ game_name = st.text_input("Enter a game name")
 
 if game_name:
     with st.spinner("Searching for game..."):
-        game = client.search_game(game_name)
+        game = client.search_best_match(game_name)
 
     if game:
         st.subheader(game['name'])
