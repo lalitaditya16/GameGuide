@@ -35,10 +35,10 @@ if game_name:
                 else:
                     st.warning(f"Skipped invalid image URL: {url}")
 
-        # Achievements in columns (updated)
+        # Achievements in columns (show all, sorted by rarity)
         achievements = client.get_achievements_by_game_id(game['id'])
         if achievements:
-            st.subheader("🏆 Top Achievements")
+            st.subheader("🏆 All Achievements")
 
             # Filter and sort by rarity (lower percent = rarer)
             filtered_achievements = [
@@ -47,12 +47,8 @@ if game_name:
             ]
             filtered_achievements.sort(key=lambda x: x.get("percent", 100))
 
-            # Slider to control how many top achievements to display
-            top_n = st.slider("How many achievements to show?", 3, min(30, len(filtered_achievements)), 9)
-            top_achievements = filtered_achievements[:top_n]
-
             cols = st.columns(3)
-            for i, ach in enumerate(top_achievements):
+            for i, ach in enumerate(filtered_achievements):
                 with cols[i % 3]:
                     st.markdown(f"**{ach['name']}**")
                     st.caption(ach.get('description', 'No description'))
