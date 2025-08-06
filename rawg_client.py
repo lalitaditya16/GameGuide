@@ -1,4 +1,5 @@
 import requests
+from difflib import get_close_matches
 
 class RAWGClient:
     BASE_URL = "https://api.rawg.io/api"
@@ -78,7 +79,34 @@ class RAWGClient:
             for game in games
         ]
 
+    
 
+
+
+    def search_best_match(self, game_name, page_size=10):
+        data = self._get("/games", {"search": game_name, "page_size": page_size})
+        results = data.get("results", [])
+
+        if not results:
+            return None
+
+        # First, try exact match (case-insensitive)
+        for game in results:
+            if game["name"].lower() == game_name.lower():
+                return game
+
+        # Fuzzy match using difflib
+        names = [game["name"] for game in results]
+        close_matches = get_close_matches(game_name, names, n=1, cutoff=0.6)
+
+        if close_matches:
+            best_match_name = close_matches[0]
+            for game in results:
+                if game["name"] == best_match_name:
+                    return game
+
+        # Fallback: return first result
+        return results[0]
     def get_game_details(self, game_id):
         return self._get(f"/games/{game_id}")
 
