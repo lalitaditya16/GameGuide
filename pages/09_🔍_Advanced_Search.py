@@ -11,10 +11,11 @@ game_name = st.text_input("Enter a game name")
 
 if game_name:
     with st.spinner("Searching for game..."):
-        game = client.search_best_match(game_name)
+        game = client.search_game(game_name)
 
     if game:
         st.subheader(game['name'])
+
         if game.get("background_image"):
             st.image(game["background_image"], use_column_width=True)
 
@@ -24,11 +25,14 @@ if game_name:
         st.markdown(f"**Platforms:** {', '.join([platform['platform']['name'] for platform in game.get('platforms', [])])}")
 
         # Screenshots
-        screenshots = client.get_game_screenshots(game['id'])
+        screenshots = client.get_screenshots(game['id'])
         if screenshots:
             st.subheader("🖼️ Screenshots")
             for url in screenshots:
-                st.image(url, use_column_width=True)
+                if url and url.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+                    st.image(url, use_column_width=True)
+                else:
+                    st.warning(f"Skipped invalid image URL: {url}")
 
         # Achievements
         achievements = client.get_achievements(game['id'])
@@ -43,8 +47,11 @@ if game_name:
                 else:
                     st.caption("Unlock percentage not available")
 
-                if ach.get("image"):
+                if ach.get("image") and ach["image"].lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
                     st.image(ach["image"], width=80)
+
                 st.markdown("---")
+        else:
+            st.info("No achievements available for this game.")
     else:
         st.error("Game not found. Please check the name and try again.")
