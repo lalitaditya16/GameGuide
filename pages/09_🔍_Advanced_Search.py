@@ -1,12 +1,12 @@
 import streamlit as st
-from RAWGClient import RAWGClient  # Ensure RAWGClient.py is in the same folder or adjust import
+from rawg_client import RAWGClient  # Ensure RAWGClient.py is in the same folder or adjust import
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # Load your RAWG API key from .env
-API_KEY = os.getenv("RAWG_API_KEY")
+API_KEY = st.secrets("RAWG_API_KEY")
 
 # Initialize client
 rawg_client = RAWGClient(API_KEY)
