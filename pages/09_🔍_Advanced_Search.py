@@ -4,7 +4,7 @@ from rawg_client import RAWGClient
 st.set_page_config(page_title="Advanced Game Search", layout="wide")
 st.title("🔍 Advanced Game Search")
 
-api_key = st.secrets["rawg_api_key"]
+api_key = st.secrets["RAWG_API_KEY"]
 client = RAWGClient(api_key)
 
 game_name = st.text_input("Enter a game name")
