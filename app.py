@@ -152,11 +152,6 @@ def main():
                 <h3 style='margin: 0; font-size: 1.5rem;'>🎮 Browse Games</h3>
                 <p style='margin: 0.5rem 0;'>Explore our vast collection of games with advanced search and filtering</p>
             </div>
-            <a href="/🎮_Browse_Games" target="_self">
-                <button style='width: 100%; padding: 0.75rem; border: none; border-radius: 8px; background-color: white; color: #764ba2; font-weight: bold; font-size: 1rem; cursor: pointer;'>
-                    🎮 Start Browsing
-                </button>
-            </a>
             """, unsafe_allow_html=True)
            
 
@@ -167,12 +162,7 @@ def main():
                 <h3 style='margin: 0; font-size: 1.5rem;'>📊 Analytics</h3>
                 <p style='margin: 0.5rem 0;'>Dive into gaming trends, statistics, and interactive visualizations</p>
         </div>
-        <a href="/📊Game Analytics" target="_self">
-            <button style='width: 100%; padding: 0.75rem; border: none; border-radius: 8px; background-color: white; color: #f5576c; font-weight: bold; font-size: 1rem; cursor: pointer;'>
-                📊 View Analytics
-            </button>
-        </a>
-        """, unsafe_allow_html=True)
+       """, unsafe_allow_html=True)
 
 
     with feature_col3:
@@ -184,8 +174,7 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
-            if st.button("🔍 Advanced Search", key="advanced_search", use_container_width=True):
-                st.info("📝 Create pages/09_🔍_Advanced_Search.py to enable advanced search")
+            
 
     with feature_col4:
         with st.container():
@@ -196,11 +185,7 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
-            if st.button("🤖 Chat with AI", key="ai_chat", use_container_width=True):
-                if chat_manager.is_available():
-                    st.info("📝 Create pages/11_🤖_AI_Chat.py to enable AI chat interface")
-                else:
-                    st.warning("⚠️ AI features require GROQ_API_KEY in your .env file")
+            
 
     st.markdown("---")
 
