@@ -205,39 +205,7 @@ def main():
     st.markdown("---")
 
     # AI-powered quick demo (if available)
-    if chat_manager.is_available():
-        st.subheader("🤖 AI Assistant Demo")
-
-        demo_col1, demo_col2 = st.columns([2, 1])
-
-        with demo_col1:
-            st.markdown("""
-            **Try our AI gaming assistant!** Ask questions like:
-            - "What are the best indie games of 2024?"
-            - "Recommend some RPGs for beginners"
-            - "Compare PlayStation 5 vs Xbox Series X"
-            """)
-
-            demo_input = st.text_input("Ask me anything about gaming:", key="demo_chat")
-
-            if st.button("Ask AI", key="demo_ask"):
-                if demo_input:
-                    with st.spinner("🤖 Thinking..."):
-                        response = chat_manager.get_response(demo_input)
-                    st.success(f"🤖 AI Response: {response}")
-
-        with demo_col2:
-            st.info("""
-            **⚡ Lightning Fast**
-            - 800+ tokens/second
-            - Sub-second responses
-            - Powered by Groq + Gemma2
-
-            **🧠 Smart & Knowledgeable**
-            - Gaming industry expertise
-            - Game recommendations
-            - Trend analysis
-            """)
+    
 
     # Recent popular games preview
     try:
