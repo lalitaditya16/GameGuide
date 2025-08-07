@@ -266,8 +266,7 @@ def main():
     st.markdown("""
     <div style='text-align: center; padding: 2rem 0; color: #666;'>
         <p>Built with ❤️ using <a href='https://streamlit.io'>Streamlit</a>, <a href='https://rawg.io'>RAWG.io API</a>, and <a href='https://groq.com'>Groq AI</a></p>
-        <p>🚀 <strong>40x faster AI responses</strong> with Groq + Gemma2-9B | 🆓 <strong>Free tiers available</strong></p>
-        <p>© 2024 RAWG Gaming Database Explorer. All rights reserved.</p>
+        <p>© 2025 RAWG Gaming Database Explorer. All rights reserved.</p>
     </div>
     """, unsafe_allow_html=True)
 
