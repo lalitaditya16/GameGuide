@@ -32,7 +32,6 @@ try:
     st.subheader(f"🎮 Top Rated Games of {selected_year}")
     raw_data = rawg_client.search_games_analytics(
         ordering="-rating",
-        platforms=selected_platform if selected_platform else None,
         year=selected_year,
         page_size=40
     )
