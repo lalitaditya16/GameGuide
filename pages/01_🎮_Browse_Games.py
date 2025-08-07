@@ -1,83 +1,67 @@
 import streamlit as st
-import pandas as pd
 from rawg_client import RAWGClient
 
-st.set_page_config(page_title="Browse Games", layout="wide")
+# Initialize API client
+rawg = RAWGClient(api_key=st.secrets["RAWG_API_KEY"])
+
+# Page config
+st.set_page_config(page_title="🎮 Browse Games", page_icon="🎮")
 st.title("🎮 Browse Games")
+st.markdown("Search for popular games using the RAWG API.")
 
-api_key = st.secrets["RAWG_API_KEY"]
-client = RAWGClient(api_key)
+# Fetch genres and platforms
+genres = rawg.get_genres()
+platforms = rawg.get_platforms()
 
-# Fetch genres and platforms only once (cached)
-@st.cache_data(show_spinner=False)
-def get_genres_and_platforms():
-    genres = client.get_genres()
-    platforms = client.get_platforms()
-    return genres, platforms
+# Sidebar - Search options
+search_query = st.sidebar.text_input("🔍 Search Games", "")
 
-genres, platforms = get_genres_and_platforms()
-
-# Sidebar filters
-st.sidebar.header("Filter Games")
-
-selected_genres = st.sidebar.multiselect(
-    "Select Genre(s)", options=[g["name"] for g in genres]
+selected_genre = st.sidebar.selectbox(
+    "🎭 Filter by Genre",
+    options=["All"] + [genre["name"] for genre in genres]
 )
 
-selected_platforms = st.sidebar.multiselect(
-    "Select Platform(s)", options=[p["name"] for p in platforms]
+selected_platform = st.sidebar.selectbox(
+    "🎮 Filter by Platform",
+    options=["All"] + [platform["name"] for platform in platforms]
 )
 
-sort_by = st.sidebar.selectbox(
-    "Sort by",
-    options=["name", "rating", "released", "added"]
-)
+# Define sort mapping
+sort_mapping = {
+    "Most Added": "-added",
+    "Highest Rated": "-rating",
+    "Newest": "-released",
+    "Name (A-Z)": "name"
+}
 
-sort_order = st.sidebar.radio("Order", ["Descending", "Ascending"], horizontal=True)
-ascending = sort_order == "Ascending"
+sort_label = st.sidebar.selectbox("↕️ Sort by", options=list(sort_mapping.keys()))
+sort_option = sort_mapping[sort_label]  # Actual value to pass to API
+
+# Prepare filters
+genre_slug = next((g["slug"] for g in genres if g["name"] == selected_genre), None) if selected_genre != "All" else None
+platform_id = next((p["id"] for p in platforms if p["name"] == selected_platform), None) if selected_platform != "All" else None
 
 # Fetch games
-@st.cache_data(show_spinner=True)
-def fetch_filtered_games():
-    return client.get_games()
+games = rawg.search_games_browse(
+    query=search_query,
+    ordering=sort_option,
+    genre=genre_slug,
+    platform=platform_id,
+    page_size=20
+)
 
-games_data = fetch_filtered_games()
-
-# Convert to DataFrame for easier filtering/sorting
-df = pd.DataFrame(games_data)
-
-# Clean platform and genre info for filtering
-def extract_names(entry, key):
-    return [item[key]["name"] for item in entry if isinstance(item, dict) and key in item and isinstance(item[key], dict)]
-
-df["genres_list"] = df["genres"].apply(lambda x: extract_names(x, "name") if isinstance(x, list) else [])
-df["platforms_list"] = df["platforms"].apply(lambda x: extract_names(x, "platform") if isinstance(x, list) else [])
-
-# Filter
-if selected_genres:
-    df = df[df["genres_list"].apply(lambda g: any(genre in g for genre in selected_genres))]
-
-if selected_platforms:
-    df = df[df["platforms_list"].apply(lambda p: any(platform in p for platform in selected_platforms))]
-
-# Sorting
-if sort_by in df.columns:
-    df = df.sort_values(by=sort_by, ascending=ascending)
-
-# Display
-if df.empty:
-    st.warning("No games found with the selected filters.")
+# Display games
+if not games:
+    st.warning("No games found.")
 else:
-    for _, game in df.iterrows():
-        with st.container():
-            cols = st.columns([1, 4])
-            with cols[0]:
-                if game.get("background_image"):
-                    st.image(game["background_image"], width=150)
-            with cols[1]:
-                st.subheader(game["name"])
-                st.markdown(f"**Released:** {game.get('released', 'N/A')}")
-                st.markdown(f"**Rating:** {game.get('rating', 'N/A')} / 5")
-                st.caption(f"Genres: {', '.join(game['genres_list'])}")
-                st.caption(f"Platforms: {', '.join(game['platforms_list'])}")
-                st.markdown("---")
+    for game in games:
+        st.subheader(game["name"])
+        cols = st.columns([1, 3])
+        with cols[0]:
+            if game.get("background_image"):
+                st.image(game["background_image"], width=120)
+        with cols[1]:
+            st.write(f"**Released:** {game.get('released', 'N/A')}")
+            st.write(f"**Rating:** {game.get('rating', 'N/A')} / 5 ⭐")
+            st.write(f"**Genres:** {', '.join([genre['name'] for genre in game.get('genres', [])])}")
+            st.markdown("---")
