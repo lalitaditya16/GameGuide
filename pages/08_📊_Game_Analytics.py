@@ -20,8 +20,7 @@ platforms_list = [p["name"] for p in rawg_client.get_platforms()]
 current_year = datetime.now().year
 selected_year = st.sidebar.selectbox("Select Year", list(range(current_year, 2014, -1)))
 
-selected_genre = st.sidebar.selectbox("Select Genre (optional)", [""] + genres_list)
-selected_platform = st.sidebar.selectbox("Select Platform (optional)", [""] + platforms_list)
+
 
 # --- Theme Colors ---
 theme = st.get_option("theme.base")
