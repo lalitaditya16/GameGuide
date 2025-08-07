@@ -209,7 +209,7 @@ def main():
 
     # Recent popular games preview
     try:
-        st.subheader("🔥 Trending games")
+        st.subheader("🔥 Popular games")
 
     # Get current month date range
         from datetime import datetime
