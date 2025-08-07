@@ -7,12 +7,23 @@ st.title("🔍 Advanced Game Search")
 api_key = st.secrets["RAWG_API_KEY"]
 client = RAWGClient(api_key)
 
-game_name = st.text_input("Enter a game name")
+tab1, tab2, tab3 = st.tabs(["🔍 Search", "🎮 Game Details", "🏆 Achievements"])
 
-if game_name:
-    with st.spinner("Searching for game..."):
-        game = client.search_best_match(game_name)
+with tab1:
+    game_name = st.text_input("Enter a game name")
 
+    if game_name:
+        with st.spinner("Searching for game..."):
+            game = client.search_best_match(game_name)
+
+        if game:
+            st.session_state["selected_game"] = game
+            st.success(f"Found: {game['name']} — switch to other tabs to see details!")
+        else:
+            st.error("Game not found. Please check the name and try again.")
+
+with tab2:
+    game = st.session_state.get("selected_game")
     if game:
         st.subheader(game['name'])
 
@@ -24,7 +35,7 @@ if game_name:
         st.markdown(f"**Genres:** {', '.join([genre['name'] for genre in game.get('genres', [])])}")
         st.markdown(f"**Platforms:** {', '.join([platform['platform']['name'] for platform in game.get('platforms', [])])}")
 
-        # Get full game details
+        # Game Details
         game_details = client.get_game_details(game['id'])
 
         if game_details:
@@ -35,7 +46,7 @@ if game_name:
             publishers = ', '.join([pub['name'] for pub in game_details.get('publishers', [])])
             website = game_details.get('website', '')
 
-            # Safely access ESRB info
+            # ESRB Info
             esrb_data = game_details.get('esrb_rating')
             esrb = esrb_data.get('name') if isinstance(esrb_data, dict) else 'N/A'
 
@@ -58,8 +69,12 @@ if game_name:
                     st.image(url, use_column_width=True)
                 else:
                     st.warning(f"Skipped invalid image URL: {url}")
+    else:
+        st.info("Please search for a game in the 'Search' tab first.")
 
-        # Achievements
+with tab3:
+    game = st.session_state.get("selected_game")
+    if game:
         achievements = client.get_achievements_by_game_id(game['id'])
 
         if achievements and isinstance(achievements, list):
@@ -95,4 +110,4 @@ if game_name:
         else:
             st.info("No achievements available for this game.")
     else:
-        st.error("Game not found. Please check the name and try again.")
+        st.info("Please search for a game in the 'Search' tab first.")
