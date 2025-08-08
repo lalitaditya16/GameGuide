@@ -1,13 +1,20 @@
 import streamlit as st
 from rawg_client import RAWGClient
+from config import SESSION_KEYS
+from helpers import load_custom_css
 
 # Initialize API client
 rawg = RAWGClient(api_key=st.secrets["RAWG_API_KEY"])
 
 # Page config
-st.set_page_config(page_title="🎮 Browse Games", page_icon="🎮")
+st.set_page_config(page_title="🎮 Browse Games", page_icon="🎮", layout="wide")
 st.title("🎮 Browse Games")
-st.markdown("Search for popular games using the RAWG API.")
+load_custom_css()
+st.caption("Find games by search, genre, platform, and sort.")
+
+# Ensure favorites state
+if SESSION_KEYS['favorites'] not in st.session_state:
+    st.session_state[SESSION_KEYS['favorites']] = []
 
 # Fetch genres and platforms
 genres = rawg.get_genres()
@@ -47,21 +54,33 @@ games = rawg.search_games_browse(
     ordering=sort_option,
     genre=genre_slug,
     platform=platform_id,
-    page_size=20
+    page_size=24
 )
 
-# Display games
+# Display as responsive grid
 if not games:
     st.warning("No games found.")
 else:
+    cards = []
     for game in games:
-        st.subheader(game["name"])
-        cols = st.columns([1, 3])
-        with cols[0]:
-            if game.get("background_image"):
-                st.image(game["background_image"], width=120)
-        with cols[1]:
-            st.write(f"**Released:** {game.get('released', 'N/A')}")
-            st.write(f"**Rating:** {game.get('rating', 'N/A')} / 5 ⭐")
-            st.write(f"**Genres:** {', '.join([genre['name'] for genre in game.get('genres', [])])}")
-            st.markdown("---")
+        name = game.get("name", "Unknown")
+        image = game.get("background_image")
+        released = game.get("released", "N/A")
+        rating = game.get("rating", "N/A")
+        genre_names = [g.get('name') for g in game.get('genres', [])][:3]
+        card = f"""
+        <div class='game-card'>
+            <div class='card-image'>
+                {'<img src="' + image + '" />' if image else ''}
+                <div class='card-overlay'></div>
+                <div class='rating-badge'>⭐ {rating}</div>
+            </div>
+            <div class='card-body'>
+                <div class='card-title'>{name}</div>
+                <div class='meta'><span class='tag'>{released}</span>{''.join([f"<span class='tag'>{g}</span>" for g in genre_names])}</div>
+            </div>
+        </div>
+        """
+        cards.append(card)
+
+    st.markdown("<div class='grid'>" + "".join(cards) + "</div>", unsafe_allow_html=True)

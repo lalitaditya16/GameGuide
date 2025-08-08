@@ -195,171 +195,134 @@ SESSION_KEYS = {
 # CSS Styles
 CUSTOM_CSS = """
 <style>
-    /* Main styling */
-    .main > div {
-        padding-top: 2rem;
+    :root {
+        --bg: #0f1223;
+        --panel: #151936;
+        --panel-2: #1b214a;
+        --text: #e9ecff;
+        --muted: #a3abda;
+        --brand-1: #6a7cff;
+        --brand-2: #a66bff;
+        --accent-1: #f5576c;
+        --accent-2: #4facfe;
+        --success: #30d158;
+        --warning: #ffd166;
+        --danger: #ff6b6b;
+        --card-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        --inner-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+        --radius-lg: 16px;
+        --radius-md: 12px;
+        --radius-sm: 8px;
     }
 
-    /* Game card styling */
+    html, body, .block-container { background: var(--bg) !important; color: var(--text) !important; }
+    .stMarkdown, .stText, .stCaption, p, span, li { color: var(--text) !important; }
+
+    /* Main padding */
+    .main > div { padding-top: 1.2rem; }
+
+    /* Hero section */
+    .hero {
+        position: relative;
+        border-radius: var(--radius-lg);
+        background: radial-gradient(1200px 600px at 10% -20%, rgba(106,124,255,0.45) 0%, transparent 60%),
+                    radial-gradient(1200px 600px at 90% 120%, rgba(166,107,255,0.35) 0%, transparent 60%),
+                    linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+        padding: 2.25rem 2rem;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+    .hero h1 {
+        margin: 0 0 .25rem 0;
+        font-size: 2.25rem;
+        letter-spacing: 0.3px;
+        background: linear-gradient(90deg, var(--brand-1), var(--brand-2));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    .hero p { margin: 0.25rem 0 0 0; color: var(--muted) !important; }
+
+    /* Section title */
+    .section-title {
+        display: flex; align-items: center; gap: .6rem;
+        font-weight: 700; color: var(--text);
+        margin: .25rem 0 1rem 0;
+    }
+    .section-title .dot { width: 10px; height: 10px; border-radius: 50%; background: linear-gradient(90deg, var(--brand-1), var(--brand-2)); box-shadow: 0 0 20px rgba(106,124,255,.7); }
+
+    /* Grid cards */
+    .grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px; width: 100%;
+    }
     .game-card {
-        border: 1px solid #e0e0e0;
-        border-radius: 10px;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        background: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.00) 100%), var(--panel);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .game-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.14); box-shadow: 0 16px 36px rgba(0,0,0,0.45); }
+
+    .card-image { position: relative; height: 150px; background: #0b0e20; overflow: hidden; }
+    .card-image img { width: 100%; height: 100%; object-fit: cover; filter: saturate(105%); }
+    .card-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,12,30,0.0) 0%, rgba(10,12,30,0.6) 100%); }
+
+    .rating-badge {
+        position: absolute; top: 10px; right: 10px;
+        background: linear-gradient(135deg, rgba(0,0,0,0.55), rgba(0,0,0,0.15));
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #fff; padding: 4px 8px; font-weight: 700; font-size: .85rem; border-radius: 999px; backdrop-filter: blur(6px);
     }
 
-    .game-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    .card-body { padding: 12px 12px 14px 12px; }
+    .card-title { margin: 0 0 6px 0; font-weight: 700; font-size: 1.0rem; color: var(--text); }
+    .meta { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .tag {
+        font-size: .72rem; padding: 4px 8px; border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+        color: var(--muted);
     }
 
-    /* Header styling */
-    .app-header {
-        text-align: center;
-        padding: 2rem 0;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 10px;
-        margin-bottom: 2rem;
+    .btn-primary {
+        display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+        width: 100%; border: none; border-radius: var(--radius-sm);
+        padding: 10px 12px; color: #fff; font-weight: 700; cursor: pointer;
+        background: linear-gradient(90deg, var(--brand-1), var(--brand-2));
+        box-shadow: 0 10px 24px rgba(106,124,255,0.35);
+        transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
     }
+    .btn-primary:hover { transform: translateY(-1px); opacity: .95; box-shadow: 0 16px 36px rgba(106,124,255,0.5); }
 
-    /* AI Chat styling */
-    .chat-message {
-        padding: 1rem;
-        margin: 0.5rem 0;
-        border-radius: 10px;
-        max-width: 80%;
-    }
+    /* Sidebar tweaks */
+    .sidebar .sidebar-content { background: var(--panel-2) !important; }
 
-    .user-message {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        margin-left: auto;
-    }
+    /* Chat bubbles */
+    .chat-message { padding: 1rem; margin: 0.5rem 0; border-radius: 12px; max-width: 85%; }
+    .user-message { background: linear-gradient(90deg, var(--brand-1), var(--brand-2)); color: white; margin-left: auto; }
+    .ai-message { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text); }
 
-    .ai-message {
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        color: #333;
-    }
-
-    .chat-input {
-        position: sticky;
-        bottom: 0;
-        background: white;
-        padding: 1rem;
-        border-top: 1px solid #e9ecef;
-    }
-
-    /* Metric styling */
-    .metric-container {
-        background: white;
-        border-radius: 10px;
-        padding: 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-
-    /* Feature card styling */
-    .feature-card {
-        padding: 1.5rem;
-        border-radius: 10px;
-        text-align: center;
-        margin-bottom: 1rem;
-        color: white;
-        cursor: pointer;
-        transition: transform 0.2s ease;
-    }
-
-    .feature-card:hover {
-        transform: scale(1.05);
-    }
-
-    /* Sidebar styling */
-    .sidebar .sidebar-content {
-        background: #f8f9fa;
-    }
-
-    /* Button styling */
+    /* Buttons */
     .stButton > button {
-        width: 100%;
-        border-radius: 8px;
-        border: none;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 0.5rem 1rem;
-        transition: all 0.2s ease;
+        width: 100%; border-radius: 10px; border: none; padding: .65rem 1rem;
+        background: linear-gradient(90deg, var(--brand-1), var(--brand-2)); color: #fff;
+        transition: transform .15s ease, box-shadow .15s ease;
+        box-shadow: 0 10px 24px rgba(106,124,255,.35);
     }
+    .stButton > button:hover { transform: translateY(-1px); box-shadow: 0 16px 36px rgba(106,124,255,.5); }
 
-    .stButton > button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
+    /* Hide default chrome */
+    #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
 
-    /* Hide Streamlit default elements */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: #667eea;
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: #5a6fd8;
-    }
-
-    /* Loading spinner */
-    .loading-spinner {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 200px;
-    }
-
-    /* Error message styling */
-    .error-message {
-        background: #ffebee;
-        border: 1px solid #f44336;
-        border-radius: 5px;
-        padding: 1rem;
-        margin: 1rem 0;
-        color: #c62828;
-    }
-
-    /* Success message styling */
-    .success-message {
-        background: #e8f5e8;
-        border: 1px solid #4caf50;
-        border-radius: 5px;
-        padding: 1rem;
-        margin: 1rem 0;
-        color: #2e7d32;
-    }
-
-    /* Info message styling */
-    .info-message {
-        background: #e3f2fd;
-        border: 1px solid #2196f3;
-        border-radius: 5px;
-        padding: 1rem;
-        margin: 1rem 0;
-        color: #1565c0;
-    }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: #0b0e20; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #2a315f; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #39438a; }
 </style>
 """
 

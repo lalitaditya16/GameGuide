@@ -4,11 +4,17 @@ from langchain_groq import ChatGroq
 from langchain.schema import SystemMessage, AIMessage, HumanMessage
 from config import config
 from rawg_client import RAWGClient  # Ensure this path is correct
+from helpers import load_custom_css
 
 # Streamlit config
-st.set_page_config(page_title="AI Game Chat", page_icon="🎮")
-st.title("🤖 AI Game Assistant")
-st.caption("Chat with an AI expert about the 2025 gaming landscape.")
+st.set_page_config(page_title="AI Game Chat", page_icon="🎮", layout="wide")
+load_custom_css()
+st.markdown("""
+<div class='hero'>
+  <h1>🤖 AI Game Assistant</h1>
+  <p>Your concise guide to games, platforms, and trends.</p>
+</div>
+""", unsafe_allow_html=True)
 
 today = datetime.now().strftime("%B %d, %Y")
 today_iso = datetime.now().strftime("%Y-%m-%d")  # For release date comparison
@@ -95,6 +101,8 @@ if prompt := st.chat_input("Ask about 2025 games..."):
                 st.error(f"Error: {e}")
 
 # Reset button
-if st.button("🔄 Reset Conversation"):
-    st.session_state.chat_history = []
-    st.experimental_rerun()
+cols = st.columns([1,4])
+with cols[0]:
+    if st.button("🔄 Reset Conversation"):
+        st.session_state.chat_history = []
+        st.experimental_rerun()

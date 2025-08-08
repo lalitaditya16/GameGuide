@@ -93,16 +93,10 @@ def main():
 
     # Main header
     st.markdown("""
-    <div style='text-align: center; padding: 2rem 0;'>
-        <h1 style='color: #FF6B6B; font-size: 3rem; margin: 0;'>
-            🎮 GAMEGUIDE
-        </h1>
-        <p style='font-size: 1.2rem; color: #666; margin-top: 0.5rem;'>
-            Discover, explore, and analyze the world's largest video game database
-        </p>
-        <p style='font-size: 1rem; color: #888; margin-top: 0.25rem;'>
-            ✨ Now with AI-powered gaming assistant using Groq + Gemma2-9B and the RAWG database
-        </p>
+    <div class='hero'>
+        <h1>🎮 GAMEGUIDE</h1>
+        <p>Discover, explore, and analyze the world's largest video game database.</p>
+        <p style='opacity:.85'>✨ AI-powered assistant (Groq + Gemma2-9B) over the RAWG database</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -110,93 +104,60 @@ def main():
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(
-            label="🎮 Total Games", 
-            value="500,000+", 
-            delta="Growing daily"
-        )
+        st.metric(label="🎮 Total Games", value="500,000+", delta="Growing daily")
 
     with col2:
-        st.metric(
-            label="🖼️ Screenshots", 
-            value="2,100,000+", 
-            delta="High quality"
-        )
+        st.metric(label="🖼️ Screenshots", value="2,100,000+", delta="High quality")
 
     with col3:
-        st.metric(
-            label="🏢 Developers", 
-            value="220,000+", 
-            delta="Worldwide"
-        )
+        st.metric(label="🏢 Developers", value="220,000+", delta="Worldwide")
 
     with col4:
-        st.metric(
-            label="🤖 AI Speed", 
-            value="800 tok/sec", 
-            delta="40x faster than GPT"
-        )
+        st.metric(label="🤖 AI Speed", value="800 tok/sec", delta="40x faster than GPT")
 
     st.markdown("---")
 
     # Featured sections
-    st.subheader("🌟 Featured Sections")
+    st.markdown("<div class='section-title'><span class='dot'></span>🌟 Featured Sections</div>", unsafe_allow_html=True)
 
     # Create feature cards
-    feature_col1, feature_col2, feature_col3, feature_col4 = st.columns(4)
-
-    with feature_col1:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🎮 Browse Games</h3>
-                <p style='margin: 0.5rem 0;'>Explore our vast collection of games with advanced search and filtering</p>
-            </div>
-            """, unsafe_allow_html=True)
-           
-
-    with feature_col2:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>📊 Analytics</h3>
-                <p style='margin: 0.5rem 0;'>Dive into gaming trends, statistics, and interactive visualizations</p>
+    c1, c2, c3, c4 = st.columns(4)
+    st.markdown("""
+    <div class='grid'>
+      <div class='game-card'>
+        <div class='card-body'>
+          <div class='card-title'>🎮 Browse Games</div>
+          <div class='meta'><span class='tag'>Search</span><span class='tag'>Filters</span><span class='tag'>Sorting</span></div>
         </div>
-       """, unsafe_allow_html=True)
-
-
-    with feature_col3:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🔍 Advanced Search</h3>
-                <p style='margin: 0.5rem 0;'>Find exactly what you're looking for with powerful search tools</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            
-
-    with feature_col4:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🤖 AI Assistant</h3>
-                <p style='margin: 0.5rem 0;'>Chat with AI about games, get recommendations, and gaming insights</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            
+      </div>
+      <div class='game-card'>
+        <div class='card-body'>
+          <div class='card-title'>📊 Analytics</div>
+          <div class='meta'><span class='tag'>Trends</span><span class='tag'>Charts</span><span class='tag'>Insights</span></div>
+        </div>
+      </div>
+      <div class='game-card'>
+        <div class='card-body'>
+          <div class='card-title'>🔍 Advanced Search</div>
+          <div class='meta'><span class='tag'>Multi-Filter</span><span class='tag'>Exact</span><span class='tag'>Screenshots</span></div>
+        </div>
+      </div>
+      <div class='game-card'>
+        <div class='card-body'>
+          <div class='card-title'>🤖 AI Assistant</div>
+          <div class='meta'><span class='tag'>Chat</span><span class='tag'>Recommend</span><span class='tag'>Explain</span></div>
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("---")
 
-    # AI-powered quick demo (if available)
-    
-
     # Recent popular games preview
     try:
-        st.subheader("🔥 Popular games")
+        st.markdown("<div class='section-title'><span class='dot'></span>🔥 Popular Games</div>", unsafe_allow_html=True)
 
-    # Get current month date range
+        # Get current month date range
         from datetime import datetime
         today = datetime.today()
         three_months_ago = today - timedelta(days=90)
@@ -209,24 +170,28 @@ def main():
             page_size=6
         )
 
-        for game in popular_games:
-            name = game.get("name")
-            rating = game.get("rating")
-            released = game.get("released")
-            platforms = game.get("platforms", [])
-            genres = game.get("genres", [])
-            image = game.get("background_image")
+        # Render grid of game cards
+        card_html = [
+            f"""
+            <div class='game-card'>
+                <div class='card-image'>
+                    {'<img src="{img}" />'.format(img=game.get('background_image')) if game.get('background_image') else ''}
+                    <div class='card-overlay'></div>
+                    <div class='rating-badge'>⭐ {game.get('rating','N/A')}</div>
+                </div>
+                <div class='card-body'>
+                    <div class='card-title'>🎮 {game.get('name')}</div>
+                    <div class='meta'>
+                        <span class='tag'>{game.get('released','N/A')}</span>
+                        {''.join([f"<span class='tag'>{g}</span>" for g in game.get('genres', [])[:3]])}
+                    </div>
+                </div>
+            </div>
+            """
+            for game in popular_games
+        ]
 
-            st.markdown(f"### 🎮 {name}")
-            st.write(f"⭐ Rating: {rating}")
-            st.write(f"📅 Released: {released}")
-            st.write(f"🧩 Platforms: {', '.join(platforms)}")
-            st.write(f"🏷️ Genres: {', '.join(genres)}")
-
-            if image:
-                st.image(image, width=600)
-
-            st.markdown("---")
+        st.markdown("<div class='grid'>" + "".join(card_html) + "</div>", unsafe_allow_html=True)
 
     except Exception as e:
         st.error("Error loading popular games:")
@@ -264,9 +229,9 @@ def main():
     # Footer
     st.markdown("---")
     st.markdown("""
-    <div style='text-align: center; padding: 2rem 0; color: #666;'>
-        <p>Built with ❤️ using <a href='https://streamlit.io'>Streamlit</a>, <a href='https://rawg.io'>RAWG.io API</a>, and <a href='https://groq.com'>Groq AI</a></p>
-        <p>© 2025 RAWG Gaming Database Explorer. All rights reserved.</p>
+    <div style='text-align:center; padding: 1.5rem 0; color: var(--muted);'>
+        <p>Built with ❤️ using <a href='https://streamlit.io' target='_blank'>Streamlit</a>, <a href='https://rawg.io' target='_blank'>RAWG.io API</a>, and <a href='https://groq.com' target='_blank'>Groq AI</a></p>
+        <p>© 2025 GameGuide. All rights reserved.</p>
     </div>
     """, unsafe_allow_html=True)
 
