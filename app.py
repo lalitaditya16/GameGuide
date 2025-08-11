@@ -1,20 +1,25 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import streamlit as st
 from streamlit_option_menu import option_menu
-import pandas as pd 
+import pandas as pd
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
-# ✅ Ensure this has no spaces/tabs before it
-from rawg_client import RAWGClient
+from datetime import datetime
+from rawg_client import RAWGClient  # ✅ fixed import syntax
 from helpers import init_session_state, load_custom_css, validate_environment, get_chat_manager
-from steam_client import SteamClient  # your class
+from steam_client import SteamClient
 import requests
+
+# Initialize Steam client
 steam_client = SteamClient()
+
 # Load environment variables
 load_dotenv()
+
 today = datetime.now().strftime("%B %d, %Y")
+
 # Page configuration
 st.set_page_config(
     page_title="🎮 GameGuide",
@@ -38,8 +43,6 @@ st.set_page_config(
         - 🔍 Advanced search functionality
         - ❤️ Favorites management
         - 🤖 AI-powered gaming assistant (NEW!)
-
-        Built with ❤️ using Streamlit, RAWG API, and Groq AI
         """
     }
 )
@@ -62,10 +65,33 @@ def init_rawg_client():
         st.error("⚠️ RAWG API key not found! Please set your API key in the .env file.")
         st.info("Get your free API key from: https://rawg.io/apidocs")
         st.stop()
-
     return RAWGClient(api_key)
 
 rawg_client = init_rawg_client()
+
+
+def display_steam_games(title, free_only):
+    """Helper to display Steam's most played games."""
+    st.subheader(title)
+    games = steam_client.get_most_played_games(limit=6, free_only=free_only)
+
+    if games:
+        for game in games:
+            name = game.get("name", "Unknown Game")
+            current_players = game.get("current_players")
+            peak_players = game.get("peak_players")
+            appid = game.get("appid")
+            image = f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg" if appid else None
+
+            st.markdown(f"### 🎮 {name}")
+            st.write(f"👥 Current Players: {current_players:,}" if current_players else "👥 Current Players: N/A")
+            st.write(f"📈 Peak Players: {peak_players:,}" if peak_players else "📈 Peak Players: N/A")
+            if image:
+                st.image(image, width=600)
+            st.markdown("---")
+    else:
+        st.info("No games found.")
+
 
 def main():
     """Main application function."""
@@ -94,177 +120,21 @@ def main():
     # Main header
     st.markdown("""
     <div style='text-align: center; padding: 2rem 0;'>
-        <h1 style='color: #FF6B6B; font-size: 3rem; margin: 0;'>
-            🎮 GAMEGUIDE
-        </h1>
-        <p style='font-size: 1.2rem; color: #666; margin-top: 0.5rem;'>
-            Discover, explore, and analyze the world's largest video game database
-        </p>
-        <p style='font-size: 1rem; color: #888; margin-top: 0.25rem;'>
-            ✨ Now with AI-powered gaming assistant using Groq + Gemma2-9B and the RAWG database
-        </p>
+        <h1 style='color: #FF6B6B; font-size: 3rem; margin: 0;'>🎮 GAMEGUIDE</h1>
+        <p style='font-size: 1.2rem; color: #666;'>Discover, explore, and analyze the world's largest video game database</p>
+        <p style='font-size: 1rem; color: #888;'>✨ Now with AI-powered gaming assistant using Groq + Gemma2-9B and the RAWG database</p>
     </div>
     """, unsafe_allow_html=True)
 
-    # Quick stats in columns
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        st.metric(
-            label="🎮 Total Games", 
-            value="500,000+", 
-            delta="Growing daily"
-        )
-
-    with col2:
-        st.metric(
-            label="🖼️ Screenshots", 
-            value="2,100,000+", 
-            delta="High quality"
-        )
-
-    with col3:
-        st.metric(
-            label="🏢 Developers", 
-            value="220,000+", 
-            delta="Worldwide"
-        )
-
-    with col4:
-        st.metric(
-            label="🤖 AI Speed", 
-            value="800 tok/sec", 
-            delta="40x faster than GPT"
-        )
-
     st.markdown("---")
 
-    # Featured sections
-    st.subheader("🌟 Featured Sections")
-
-    # Create feature cards
-    feature_col1, feature_col2, feature_col3, feature_col4 = st.columns(4)
-
-    with feature_col1:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🎮 Browse Games</h3>
-                <p style='margin: 0.5rem 0;'>Explore our vast collection of games with advanced search and filtering</p>
-            </div>
-            """, unsafe_allow_html=True)
-           
-
-    with feature_col2:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>📊 Analytics</h3>
-                <p style='margin: 0.5rem 0;'>Dive into gaming trends, statistics, and interactive visualizations</p>
-        </div>
-       """, unsafe_allow_html=True)
-
-
-    with feature_col3:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🔍 Advanced Search</h3>
-                <p style='margin: 0.5rem 0;'>Find exactly what you're looking for with powerful search tools</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            
-
-    with feature_col4:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🤖 AI Assistant</h3>
-                <p style='margin: 0.5rem 0;'>Chat with AI about games, get recommendations, and gaming insights</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            
-
-    st.markdown("---")
-
-    # AI-powered quick demo (if available)
-    
-
-        # Recent popular games preview (FREE and PAID)
+    # Show Steam games sections
     try:
-        st.subheader("🔥 Most Played Free Games on Steam")
-
-        free_games = steam_client.get_most_played_games(limit=6, free_only=True)
-        if free_games:
-            for game in free_games:
-                name = game.get("name")
-                current_players = game.get("current_players")
-                peak_players = game.get("peak_players")
-                appid = game.get("appid")
-                image = f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
-
-                st.markdown(f"### 🎮 {name}")
-                st.write(f"👥 Current Players: {current_players:,}" if current_players else "👥 Current Players: N/A")
-                st.write(f"📈 Peak Players: {peak_players:,}" if peak_players else "📈 Peak Players: N/A")
-                st.image(image, width=600)
-                st.markdown("---")
-        else:
-            st.info("No free games found.")
-
-        st.subheader("💰 Most Played Paid Games on Steam")
-
-        paid_games = steam_client.get_most_played_games(limit=6, free_only=False)
-        if paid_games:
-            for game in paid_games:
-                name = game.get("name")
-                current_players = game.get("current_players")
-                peak_players = game.get("peak_players")
-                appid = game.get("appid")
-                image = f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
-
-                st.markdown(f"### 🎮 {name}")
-                st.write(f"👥 Current Players: {current_players:,}" if current_players else "👥 Current Players: N/A")
-                st.write(f"📈 Peak Players: {peak_players:,}" if peak_players else "📈 Peak Players: N/A")
-                st.image(image, width=600)
-                st.markdown("---")
-        else:
-            st.info("No paid games found.")
-
+        display_steam_games("🔥 Most Played Free Games on Steam", free_only=True)
+        display_steam_games("💰 Most Played Paid Games on Steam", free_only=False)
     except Exception as e:
         st.error("Error loading Steam's most played games:")
         st.exception(e)
-
-
-    nav_col1, nav_col2 = st.columns([1, 5])
-    with nav_col1:
-        st.markdown("""
-        **🎮 Game Discovery:**
-        - Browse Games: Search and filter games
-        - Genres: Explore by game categories  
-        - Platforms: Find games for your system
-        - Advanced Search: Multi-parameter filtering
-
-        **🤖 AI Features:**
-        - AI Chat: Natural language gaming assistant
-        - Game Analysis: AI-powered game insights
-        - Recommendations: Personalized suggestions
-        """)
-
-    with nav_col2:
-        st.markdown("""
-        **🏢 Industry Insights:**
-        - Developers: Game development studios
-        - Publishers: Game publishing companies
-        - Creators: Individual contributors
-        - Analytics: Trends and statistics
-
-        **⚙️ Setup Requirements:**
-        - RAWG API Key: Get from rawg.io/apidocs
-        - Groq API Key: Get from console.groq.com/keys
-        - Environment file: Copy env-template.txt to .env
-        """)
 
     # Footer
     st.markdown("---")
@@ -274,6 +144,7 @@ def main():
         <p>© 2025 RAWG Gaming Database Explorer. All rights reserved.</p>
     </div>
     """, unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
