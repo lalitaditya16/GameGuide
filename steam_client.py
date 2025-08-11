@@ -76,3 +76,25 @@ class SteamClient:
         except Exception as e:
             print(f"Error fetching most played games: {e}")
             return []
+    def get_peak_players(self, appid):
+        """
+        Get daily peak players from SteamCharts by scraping the HTML.
+        """
+        try:
+            charts_url = f"https://steamcharts.com/app/{appid}"
+            r = requests.get(charts_url, timeout=5)
+            r.raise_for_status()
+
+        # Look for "Peak Today" in the HTML and grab the number after it
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(r.text, "html.parser")
+            stats = soup.find_all("div", class_="app-stat")
+
+            for stat in stats:
+                if "Peak Today" in stat.text:
+                    peak_text = stat.find("span", class_="num").text.strip()
+                    return int(peak_text.replace(",", ""))
+
+        except Exception:
+            pass
+        return None 
