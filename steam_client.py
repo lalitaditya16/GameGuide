@@ -1,3 +1,4 @@
+import requests
 class SteamClient:
     BASE_URL = "https://api.steampowered.com"
 
