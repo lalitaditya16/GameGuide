@@ -80,21 +80,28 @@ class SteamClient:
         """
         Get daily peak players from SteamCharts by scraping the HTML.
         """
+        import requests
+        from bs4 import BeautifulSoup
+
         try:
             charts_url = f"https://steamcharts.com/app/{appid}"
-            r = requests.get(charts_url, timeout=5)
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+            r = requests.get(charts_url, headers=headers, timeout=5)
             r.raise_for_status()
 
-        # Look for "Peak Today" in the HTML and grab the number after it
-            from bs4 import BeautifulSoup
             soup = BeautifulSoup(r.text, "html.parser")
-            stats = soup.find_all("div", class_="app-stat")
+            stat_blocks = soup.select("div.app-stat")
 
-            for stat in stats:
-                if "Peak Today" in stat.text:
-                    peak_text = stat.find("span", class_="num").text.strip()
-                    return int(peak_text.replace(",", ""))
+            for block in stat_blocks:
+                title = block.select_one("span.app-stat-name")
+                value = block.select_one("span.num")
+                if title and "Peak Today" in title.text and value:
+                    return int(value.text.strip().replace(",", ""))
 
-        except Exception:
-            pass
-        return None 
+        except Exception as e:
+            print(f"Error fetching peak players for appid {appid}: {e}")
+
+        return None
