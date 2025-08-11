@@ -27,7 +27,7 @@ st.set_page_config(
         'Get Help': 'https://github.com/yourusername/rawg-streamlit-app',
         'Report a bug': 'https://github.com/yourusername/rawg-streamlit-app/issues',
         'About': """
-        # GAMEGUIDE powered by RAWG
+        # GAMEGUIDE powered by RAWG and STEAM
         **Version**: 1.0.0 (with Groq AI integration)
         **Description**: A comprehensive web application for exploring video games with AI-powered features.
         - 🎮 Browse 500,000+ games
