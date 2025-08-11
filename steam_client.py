@@ -1,4 +1,6 @@
 import requests
+from bs4 import BeautifulSoup
+import re
 
 class SteamClient:
     BASE_URL = "https://api.steampowered.com"
@@ -33,21 +35,20 @@ class SteamClient:
 
     def get_peak_players(self, appid):
         """
-        Get daily peak players from SteamCharts API (public scrape).
-        Valve's Web API doesn't provide this directly.
+        Get daily peak players from SteamCharts by scraping the HTML.
         """
         try:
             charts_url = f"https://steamcharts.com/app/{appid}"
             r = requests.get(charts_url, timeout=5)
             r.raise_for_status()
-            # Very naive scrape: find "Peak Today" number in HTML
-            if "Peak Today" in r.text:
-                start = r.text.find("Peak Today")
-                snippet = r.text[start:start+100]
-                import re
-                match = re.search(r"(\d{1,3}(?:,\d{3})*)", snippet)
-                if match:
-                    return int(match.group(1).replace(",", ""))
+
+            soup = BeautifulSoup(r.text, "html.parser")
+            stats = soup.find_all("div", class_="app-stat")
+
+            for stat in stats:
+                if "Peak Today" in stat.text:
+                    peak_text = stat.find("span", class_="num").text.strip()
+                    return int(peak_text.replace(",", ""))
         except Exception:
             pass
         return None
@@ -76,32 +77,55 @@ class SteamClient:
         except Exception as e:
             print(f"Error fetching most played games: {e}")
             return []
-    def get_peak_players(self, appid):
-        """
-        Get daily peak players from SteamCharts by scraping the HTML.
-        """
-        import requests
-        from bs4 import BeautifulSoup
 
+    def get_top_free_games(self, limit=10):
+        """Get top free-to-play games from Steam search page."""
+        url = "https://store.steampowered.com/search/?filter=free&sort_by=ConcurrentUsers_DESC"
         try:
-            charts_url = f"https://steamcharts.com/app/{appid}"
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                          "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            }
-            r = requests.get(charts_url, headers=headers, timeout=5)
+            r = requests.get(url, timeout=5)
             r.raise_for_status()
-
             soup = BeautifulSoup(r.text, "html.parser")
-            stat_blocks = soup.select("div.app-stat")
+            games = []
 
-            for block in stat_blocks:
-                title = block.select_one("span.app-stat-name")
-                value = block.select_one("span.num")
-                if title and "Peak Today" in title.text and value:
-                    return int(value.text.strip().replace(",", ""))
+            for item in soup.select(".search_result_row")[:limit]:
+                title = item.select_one(".title").text.strip()
+                link = item["href"]
+                appid = link.split("/app/")[1].split("/")[0]
+                games.append({
+                    "appid": appid,
+                    "name": title,
+                    "url": link,
+                    "current_players": self.get_current_players(appid),
+                    "peak_players": self.get_peak_players(appid)
+                })
 
+            return games
         except Exception as e:
-            print(f"Error fetching peak players for appid {appid}: {e}")
+            print("Error fetching free games:", e)
+            return []
 
-        return None
+    def get_top_paid_games(self, limit=10):
+        """Get top paid games from Steam search page."""
+        url = "https://store.steampowered.com/search/?sort_by=ConcurrentUsers_DESC&maxprice=999999&filter=topsellers"
+        try:
+            r = requests.get(url, timeout=5)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text, "html.parser")
+            games = []
+
+            for item in soup.select(".search_result_row")[:limit]:
+                title = item.select_one(".title").text.strip()
+                link = item["href"]
+                appid = link.split("/app/")[1].split("/")[0]
+                games.append({
+                    "appid": appid,
+                    "name": title,
+                    "url": link,
+                    "current_players": self.get_current_players(appid),
+                    "peak_players": self.get_peak_players(appid)
+                })
+
+            return games
+        except Exception as e:
+            print("Error fetching paid games:", e)
+            return []
