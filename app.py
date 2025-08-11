@@ -199,7 +199,7 @@ def main():
     # Get current month date range
         from datetime import datetime
         today = datetime.today()
-        three_months_ago = today - timedelta(days=90)
+        three_months_ago = today - timedelta(days=30)
         start_date = three_months_ago.strftime("%Y-%m-%d")
         end_date = today.strftime("%Y-%m-%d")
 
