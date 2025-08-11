@@ -11,10 +11,13 @@ from rawg_client import RAWGClient
 from helpers import init_session_state, load_custom_css, validate_environment, get_chat_manager
 from steam_client import SteamClient  # your class
 import requests
+
 steam_client = SteamClient()
+
 # Load environment variables
 load_dotenv()
 today = datetime.now().strftime("%B %d, %Y")
+
 # Page configuration
 st.set_page_config(
     page_title="🎮 GameGuide",
@@ -62,7 +65,6 @@ def init_rawg_client():
         st.error("⚠️ RAWG API key not found! Please set your API key in the .env file.")
         st.info("Get your free API key from: https://rawg.io/apidocs")
         st.stop()
-
     return RAWGClient(api_key)
 
 rawg_client = init_rawg_client()
@@ -110,132 +112,93 @@ def main():
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(
-            label="🎮 Total Games", 
-            value="500,000+", 
-            delta="Growing daily"
-        )
+        st.metric(label="🎮 Total Games", value="500,000+", delta="Growing daily")
 
     with col2:
-        st.metric(
-            label="🖼️ Screenshots", 
-            value="2,100,000+", 
-            delta="High quality"
-        )
+        st.metric(label="🖼️ Screenshots", value="2,100,000+", delta="High quality")
 
     with col3:
-        st.metric(
-            label="🏢 Developers", 
-            value="220,000+", 
-            delta="Worldwide"
-        )
+        st.metric(label="🏢 Developers", value="220,000+", delta="Worldwide")
 
     with col4:
-        st.metric(
-            label="🤖 AI Speed", 
-            value="800 tok/sec", 
-            delta="40x faster than GPT"
-        )
+        st.metric(label="🤖 AI Speed", value="800 tok/sec", delta="40x faster than GPT")
 
     st.markdown("---")
 
     # Featured sections
     st.subheader("🌟 Featured Sections")
 
-    # Create feature cards
     feature_col1, feature_col2, feature_col3, feature_col4 = st.columns(4)
 
     with feature_col1:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🎮 Browse Games</h3>
-                <p style='margin: 0.5rem 0;'>Explore our vast collection of games with advanced search and filtering</p>
-            </div>
-            """, unsafe_allow_html=True)
-           
+        st.markdown("""
+        <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; margin-bottom: 1rem;'>
+            <h3 style='margin: 0; font-size: 1.5rem;'>🎮 Browse Games</h3>
+            <p style='margin: 0.5rem 0;'>Explore our vast collection of games with advanced search and filtering</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     with feature_col2:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>📊 Analytics</h3>
-                <p style='margin: 0.5rem 0;'>Dive into gaming trends, statistics, and interactive visualizations</p>
+        st.markdown("""
+        <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-align: center; margin-bottom: 1rem;'>
+            <h3 style='margin: 0; font-size: 1.5rem;'>📊 Analytics</h3>
+            <p style='margin: 0.5rem 0;'>Dive into gaming trends, statistics, and interactive visualizations</p>
         </div>
-       """, unsafe_allow_html=True)
-
+        """, unsafe_allow_html=True)
 
     with feature_col3:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🔍 Advanced Search</h3>
-                <p style='margin: 0.5rem 0;'>Find exactly what you're looking for with powerful search tools</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            
+        st.markdown("""
+        <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; text-align: center; margin-bottom: 1rem;'>
+            <h3 style='margin: 0; font-size: 1.5rem;'>🔍 Advanced Search</h3>
+            <p style='margin: 0.5rem 0;'>Find exactly what you're looking for with powerful search tools</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     with feature_col4:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🤖 AI Assistant</h3>
-                <p style='margin: 0.5rem 0;'>Chat with AI about games, get recommendations, and gaming insights</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            
+        st.markdown("""
+        <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; text-align: center; margin-bottom: 1rem;'>
+            <h3 style='margin: 0; font-size: 1.5rem;'>🤖 AI Assistant</h3>
+            <p style='margin: 0.5rem 0;'>Chat with AI about games, get recommendations, and gaming insights</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("---")
 
-    # AI-powered quick demo (if available)
-    
-
-        # Recent popular games preview (FREE and PAID)
+    # 🔄 Updated Popular Games Section (Free & Paid)
     try:
-        st.subheader("🔥 Most Played Free Games on Steam")
+        st.subheader("🔥 Most Played Games on Steam")
 
-        free_games = steam_client.get_most_played_games(limit=6, free_only=True)
-        if free_games:
-            for game in free_games:
-                name = game.get("name")
-                current_players = game.get("current_players")
-                peak_players = game.get("peak_players")
-                appid = game.get("appid")
-                image = f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
+        col_free, col_paid = st.columns(2)
 
-                st.markdown(f"### 🎮 {name}")
-                st.write(f"👥 Current Players: {current_players:,}" if current_players else "👥 Current Players: N/A")
-                st.write(f"📈 Peak Players: {peak_players:,}" if peak_players else "📈 Peak Players: N/A")
-                st.image(image, width=600)
-                st.markdown("---")
-        else:
-            st.info("No free games found.")
+        with col_free:
+            st.markdown("### 🆓 Free to Play")
+            free_games = steam_client.get_most_played_games(limit=6, free_only=True)
+            if free_games:
+                for game in free_games:
+                    appid = game.get("appid")
+                    st.image(f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg", width=300)
+                    st.write(f"**{game.get('name')}**")
+                    st.caption(f"👥 {game.get('current_players', 'N/A'):,} | 📈 Peak: {game.get('peak_players', 'N/A'):,}")
+                    st.markdown("---")
+            else:
+                st.info("No free games found.")
 
-        st.subheader("💰 Most Played Paid Games on Steam")
-
-        paid_games = steam_client.get_most_played_games(limit=6, free_only=False)
-        if paid_games:
-            for game in paid_games:
-                name = game.get("name")
-                current_players = game.get("current_players")
-                peak_players = game.get("peak_players")
-                appid = game.get("appid")
-                image = f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
-
-                st.markdown(f"### 🎮 {name}")
-                st.write(f"👥 Current Players: {current_players:,}" if current_players else "👥 Current Players: N/A")
-                st.write(f"📈 Peak Players: {peak_players:,}" if peak_players else "📈 Peak Players: N/A")
-                st.image(image, width=600)
-                st.markdown("---")
-        else:
-            st.info("No paid games found.")
+        with col_paid:
+            st.markdown("### 💰 Paid Games")
+            paid_games = steam_client.get_most_played_games(limit=6, free_only=False)
+            if paid_games:
+                for game in paid_games:
+                    appid = game.get("appid")
+                    st.image(f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg", width=300)
+                    st.write(f"**{game.get('name')}**")
+                    st.caption(f"👥 {game.get('current_players', 'N/A'):,} | 📈 Peak: {game.get('peak_players', 'N/A'):,}")
+                    st.markdown("---")
+            else:
+                st.info("No paid games found.")
 
     except Exception as e:
         st.error("Error loading Steam's most played games:")
         st.exception(e)
-
 
     nav_col1, nav_col2 = st.columns([1, 5])
     with nav_col1:
@@ -277,5 +240,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
