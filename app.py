@@ -211,7 +211,10 @@ def main():
                 st.write(f"👥 Current Players: {current_players:,}")
             else:
                 st.write("👥 Current Players: N/A")
-            st.write(f"📈 Peak Today: {peak_players:,}")
+            if peak_players is not None:
+                st.write(f"👥 Peak Players: {peak_players:,}")
+            else:
+                st.write("👥 Peak Players: N/A")
 
             if image:
                 st.image(image, width=600)
