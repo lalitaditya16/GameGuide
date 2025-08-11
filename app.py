@@ -192,34 +192,45 @@ def main():
     # AI-powered quick demo (if available)
     
 
-    # Recent popular games preview
+        # Recent popular games preview (FREE and PAID)
     try:
-        st.subheader("🔥 Most Played Games on Steam")
+        st.subheader("🔥 Most Played Free Games on Steam")
 
-    # Get top currently played games from Steam
-        most_played_games = steam_client.get_most_played_games(limit=6)  # limit can be adjusted
+        free_games = steam_client.get_most_played_games(limit=6, free_only=True)
+        if free_games:
+            for game in free_games:
+                name = game.get("name")
+                current_players = game.get("current_players")
+                peak_players = game.get("peak_players")
+                appid = game.get("appid")
+                image = f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
 
-        for game in most_played_games:
-            name = game.get("name")
-            current_players = game.get("current_players")
-            peak_players = game.get("peak_players")
-            appid = game.get("appid")
-            image = f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
-
-            st.markdown(f"### 🎮 {name}")
-            if current_players is not None:
-                st.write(f"👥 Current Players: {current_players:,}")
-            else:
-                st.write("👥 Current Players: N/A")
-            if peak_players is not None:
-                st.write(f"👥 Peak Players: {peak_players:,}")
-            else:
-                st.write("👥 Peak Players: N/A")
-
-            if image:
+                st.markdown(f"### 🎮 {name}")
+                st.write(f"👥 Current Players: {current_players:,}" if current_players else "👥 Current Players: N/A")
+                st.write(f"📈 Peak Players: {peak_players:,}" if peak_players else "📈 Peak Players: N/A")
                 st.image(image, width=600)
+                st.markdown("---")
+        else:
+            st.info("No free games found.")
 
-            st.markdown("---")
+        st.subheader("💰 Most Played Paid Games on Steam")
+
+        paid_games = steam_client.get_most_played_games(limit=6, free_only=False)
+        if paid_games:
+            for game in paid_games:
+                name = game.get("name")
+                current_players = game.get("current_players")
+                peak_players = game.get("peak_players")
+                appid = game.get("appid")
+                image = f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
+
+                st.markdown(f"### 🎮 {name}")
+                st.write(f"👥 Current Players: {current_players:,}" if current_players else "👥 Current Players: N/A")
+                st.write(f"📈 Peak Players: {peak_players:,}" if peak_players else "📈 Peak Players: N/A")
+                st.image(image, width=600)
+                st.markdown("---")
+        else:
+            st.info("No paid games found.")
 
     except Exception as e:
         st.error("Error loading Steam's most played games:")
