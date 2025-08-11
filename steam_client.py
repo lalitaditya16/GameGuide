@@ -53,30 +53,45 @@ class SteamClient:
             pass
         return None
 
-    def get_most_played_games(self, limit=10):
-        """Get most played games with name, current, and peak players."""
-        endpoint = f"{self.BASE_URL}/ISteamChartsService/GetMostPlayedGames/v1/"
+    def get_most_played_games(self, limit=10, free_only=None):
+        """Get most played games, optionally filtering by free/paid."""
+        url = "https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/"
         try:
-            r = requests.get(endpoint, timeout=5)
+            r = requests.get(url, timeout=5)
             r.raise_for_status()
             data = r.json()
-            games = data.get("response", {}).get("ranks", [])
-            result = []
-            for game in games[:limit]:
-                appid = game.get("appid")
-                name = self.get_game_name(appid)
-                current_players = self.get_current_players(appid)
-                peak_players = self.get_peak_players(appid)
-                result.append({
+            games_list = data.get("response", {}).get("ranks", [])
+
+            results = []
+            for g in games_list[:limit * 2]:  # get extra to allow filtering
+                appid = g.get("appid")
+                details = self.get_app_details(appid)
+                if not details:
+                    continue
+
+                is_free = details.get("is_free", False)
+                if free_only is True and not is_free:
+                    continue
+                if free_only is False and is_free:
+                    continue
+
+                results.append({
                     "appid": appid,
-                    "name": name,
-                    "current_players": current_players,
-                    "peak_players": peak_players
+                    "name": details.get("name"),
+                    "current_players": g.get("concurrent_in_game"),
+                    "peak_players": self.get_peak_players(appid),
+                    "is_free": is_free
                 })
-            return result
+
+                if len(results) >= limit:
+                    break
+
+            return results
+
         except Exception as e:
             print(f"Error fetching most played games: {e}")
             return []
+
 
     def get_top_free_games(self, limit=10):
         """Get top free-to-play games from Steam search page."""
