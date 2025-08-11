@@ -12,6 +12,7 @@ from rawg_client import RAWGClient
 from helpers import init_session_state, load_custom_css, validate_environment, get_chat_manager
 
 
+steam_client = SteamClient(api_key=st.secrets["STEAM_API_KEY"])
 # Load environment variables
 load_dotenv()
 today = datetime.now().strftime("%B %d, %Y")
