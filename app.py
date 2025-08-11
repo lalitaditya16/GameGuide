@@ -97,6 +97,48 @@ def main():
 
     st.markdown("---")
     st.subheader("🌟 Featured Sections")
+     # Create feature cards
+    feature_col1, feature_col2, feature_col3, feature_col4 = st.columns(4)
+
+    with feature_col1:
+        with st.container():
+            st.markdown("""
+            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; margin-bottom: 1rem;'>
+                <h3 style='margin: 0; font-size: 1.5rem;'>🎮 Browse Games</h3>
+                <p style='margin: 0.5rem 0;'>Explore our vast collection of games with advanced search and filtering</p>
+            </div>
+            """, unsafe_allow_html=True)
+           
+
+    with feature_col2:
+        with st.container():
+            st.markdown("""
+            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-align: center; margin-bottom: 1rem;'>
+                <h3 style='margin: 0; font-size: 1.5rem;'>📊 Analytics</h3>
+                <p style='margin: 0.5rem 0;'>Dive into gaming trends, statistics, and interactive visualizations</p>
+        </div>
+       """, unsafe_allow_html=True)
+
+
+    with feature_col3:
+        with st.container():
+            st.markdown("""
+            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; text-align: center; margin-bottom: 1rem;'>
+                <h3 style='margin: 0; font-size: 1.5rem;'>🔍 Advanced Search</h3>
+                <p style='margin: 0.5rem 0;'>Find exactly what you're looking for with powerful search tools</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            
+
+    with feature_col4:
+        with st.container():
+            st.markdown("""
+            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; text-align: center; margin-bottom: 1rem;'>
+                <h3 style='margin: 0; font-size: 1.5rem;'>🤖 AI Assistant</h3>
+                <p style='margin: 0.5rem 0;'>Chat with AI about games, get recommendations, and gaming insights</p>
+            </div>
+            """, unsafe_allow_html=True)
 
     # Featured cards (omitted here for brevity — same as yours)
 
