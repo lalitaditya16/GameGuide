@@ -7,7 +7,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 # ✅ Ensure this has no spaces/tabs before it
-from rawg_client import RAWGClient make the changes u reccomened here and give the full code 
+from rawg_client import RAWGClient
 from helpers import init_session_state, load_custom_css, validate_environment, get_chat_manager
 from steam_client import SteamClient  # your class
 import requests
