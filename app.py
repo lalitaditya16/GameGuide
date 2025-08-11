@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from rawg_client import RAWGClient
 from helpers import init_session_state, load_custom_css, validate_environment, get_chat_manager
 from steam_client import SteamClient  # your class
-
+import requests
 steam_client = SteamClient()
 # Load environment variables
 load_dotenv()
