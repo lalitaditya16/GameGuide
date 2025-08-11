@@ -6,7 +6,7 @@ from streamlit_option_menu import option_menu
 import pandas as pd 
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-
+from steam_client import SteamClient
 # ✅ Ensure this has no spaces/tabs before it
 from rawg_client import RAWGClient
 from helpers import init_session_state, load_custom_css, validate_environment, get_chat_manager
@@ -194,34 +194,21 @@ def main():
 
     # Recent popular games preview
     try:
-        st.subheader("🔥 Popular games")
+        st.subheader("🔥 Most Played Games on Steam")
 
-    # Get current month date range
-        from datetime import datetime
-        today = datetime.today()
-        three_months_ago = today - timedelta(days=60)
-        start_date = three_months_ago.strftime("%Y-%m-%d")
-        end_date = today.strftime("%Y-%m-%d")
+    # Get top currently played games from Steam
+        most_played_games = steam_client.get_most_played_games(limit=6)  # limit can be adjusted
 
-        popular_games = rawg_client.search_games_popular(
-            ordering="-rating",
-            dates=f"{start_date},{end_date}",
-            page_size=6
-        )
-
-        for game in popular_games:
+        for game in most_played_games:
             name = game.get("name")
-            rating = game.get("rating")
-            released = game.get("released")
-            platforms = game.get("platforms", [])
-            genres = game.get("genres", [])
-            image = game.get("background_image")
+            current_players = game.get("current_players")
+            peak_players = game.get("peak_players")
+            appid = game.get("appid")
+            image = f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
 
             st.markdown(f"### 🎮 {name}")
-            st.write(f"⭐ Rating: {rating}")
-            st.write(f"📅 Released: {released}")
-            st.write(f"🧩 Platforms: {', '.join(platforms)}")
-            st.write(f"🏷️ Genres: {', '.join(genres)}")
+            st.write(f"👥 Current Players: {current_players:,}")
+            st.write(f"📈 Peak Today: {peak_players:,}")
 
             if image:
                 st.image(image, width=600)
@@ -229,8 +216,9 @@ def main():
             st.markdown("---")
 
     except Exception as e:
-        st.error("Error loading popular games:")
+        st.error("Error loading Steam's most played games:")
         st.exception(e)
+
 
     nav_col1, nav_col2 = st.columns([1, 5])
     with nav_col1:
