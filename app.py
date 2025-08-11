@@ -207,7 +207,10 @@ def main():
             image = f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
 
             st.markdown(f"### 🎮 {name}")
-            st.write(f"👥 Current Players: {current_players:,}")
+            if current_players is not None:
+                st.write(f"👥 Current Players: {current_players:,}")
+            else:
+                st.write("👥 Current Players: N/A")
             st.write(f"📈 Peak Today: {peak_players:,}")
 
             if image:
