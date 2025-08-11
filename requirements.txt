@@ -1,7 +1,7 @@
 # Core Streamlit and Web Framework
 streamlit==1.28.1
 streamlit-option-menu==0.3.6
-
+requests
 # HTTP Requests and API Integration
 requests==2.31.0
 httpx==0.25.0
