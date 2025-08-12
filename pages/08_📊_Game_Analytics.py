@@ -108,10 +108,9 @@ try:
 
 # Fetch games from RAWG
     games_year = rawg_client.get_games_with_steam_ids(
-    dates=f"{selected_year}-01-01,{selected_year}-12-31",
-    ordering="-added",  # Sort by popularity
+    year=selected_year,
     page_size=20
-    )
+)
 
     games_peak_data = []
     for game in games_year:
