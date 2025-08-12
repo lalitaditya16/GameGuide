@@ -24,18 +24,16 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
-        'Get Help': 'https://github.com/yourusername/rawg-streamlit-app',
-        'Report a bug': 'https://github.com/yourusername/rawg-streamlit-app/issues',
+        'Get Help': 'https://github.com/lalitaditya16/gameguide-streamlit-app',
+        'Report a bug': 'https://github.com/lalitaditya16/gameguide-streamlit-app/issues',
         'About': """
         # GAMEGUIDE powered by RAWG and STEAM
-        **Version**: 1.0.0 (with Groq AI integration)
         **Description**: A comprehensive web application for exploring video games with AI-powered features.
-        - 🎮 Browse 500,000+ games
+        - 🎮 Browse  around 500,000+ games
         - 🏢 Explore developers and publishers
         - 📊 Interactive analytics and charts
         - 🔍 Advanced search functionality
-        - ❤️ Favorites management
-        - 🤖 AI-powered gaming assistant (NEW!)
+        - 🤖 AI-powered gaming assistant 
         """
     }
 )
@@ -84,8 +82,8 @@ def main():
     st.markdown("""
     <div style='text-align: center; padding: 2rem 0;'>
         <h1 style='color: #FF6B6B; font-size: 3rem; margin: 0;'>🎮 GAMEGUIDE</h1>
-        <p style='font-size: 1.2rem; color: #666;'>Discover, explore, and analyze the world's largest video game database</p>
-        <p style='font-size: 1rem; color: #888;'>✨ Now with AI-powered gaming assistant using Groq + Gemma2-9B and the RAWG database</p>
+        <p style='font-size: 1.2rem; color: #666;'>Discover, explore, and analyze and enjoy the world of video games</p>
+        <p style='font-size: 1rem; color: #888;'>✨ Powered with  an AI gaming assistant using Groq + Gemma2-9B along with the RAWG database and Steam database</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -93,7 +91,7 @@ def main():
     col1.metric(label="🎮 Total Games", value="500,000+", delta="Growing daily")
     col2.metric(label="🖼️ Screenshots", value="2,100,000+", delta="High quality")
     col3.metric(label="🏢 Developers", value="220,000+", delta="Worldwide")
-    col4.metric(label="🤖 AI Speed", value="800 tok/sec", delta="40x faster than GPT")
+    col4.metric(label="🤖 AI Speed", value="800 tok/sec", delta="Rapid responses")
 
     st.markdown("---")
     st.subheader("🌟 Featured Sections")
@@ -183,7 +181,7 @@ def main():
     st.markdown("""
     <div style='text-align: center; padding: 2rem 0; color: #666;'>
         <p>Built with ❤️ using <a href='https://streamlit.io'>Streamlit</a>, <a href='https://rawg.io'>RAWG.io API</a>, and <a href='https://groq.com'>Groq AI</a></p>
-        <p>© 2025 RAWG Gaming Database Explorer. All rights reserved.</p>
+        <p>© GAMEGUIDE VERSION 2025</p>
     </div>
     """, unsafe_allow_html=True)
 
