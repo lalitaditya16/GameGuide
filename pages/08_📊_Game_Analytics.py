@@ -103,3 +103,54 @@ try:
 except Exception as e:
     st.error("Failed to load game analytics.")
     st.exception(e)
+try:
+    st.subheader(f"🔥 All-Time Peak Players for Games Released in {selected_year}")
+
+# Fetch games from RAWG
+    games_year = rawg_client.search_games_analytics(
+    dates=f"{selected_year}-01-01,{selected_year}-12-31",
+    ordering="-added",  # Sort by popularity
+    page_size=20
+    )
+
+    games_peak_data = []
+    for game in games_year:
+    # Find Steam App ID from RAWG stores list
+        steam_info = next(
+            (store for store in game.get("stores", []) if store["store"]["name"].lower() == "steam"),
+            None
+        )
+        if steam_info and "url" in steam_info:
+            try:
+                steam_url = steam_info["url"]
+                app_id = steam_url.split("/app/")[1].split("/")[0]
+                peak_players = steam_client.get_all_time_peak_players(app_id)
+            except:
+                peak_players = None
+        else:
+            peak_players = None
+
+        games_peak_data.append({
+            "Name": game.get("name"),
+            "Released": game.get("released"),
+            "Peak Players": peak_players,
+            "Image": game.get("background_image")
+        })
+
+# Sort by peak players
+    df_peak = pd.DataFrame(games_peak_data).sort_values(
+        by="Peak Players", ascending=False, na_position='last'
+    )
+
+    if df_peak.empty:
+        st.warning(f"No Steam data found for {selected_year}.")
+    else:
+        st.dataframe(df_peak[["Name", "Released", "Peak Players"]])
+
+        st.markdown("### 🏆 Top 5 Games by Peak Players")
+        for _, row in df_peak.head(5).iterrows():
+            st.markdown(f"#### {row['Name']}")
+            st.write(f"📅 Released: {row['Released']} | 👥 Peak Players: {row['Peak Players']}")
+            if row["Image"]:
+                st.image(row["Image"], width=600)
+            st.markdown("---")
