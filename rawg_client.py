@@ -178,7 +178,7 @@ class RAWGClient:
                     if store["store"]["slug"] == "steam":
                     # URL format: https://store.steampowered.com/app/<appid>/
                         url = store.get("url")
-                            if url and "store.steampowered.com/app/" in url:
+                        if url and "store.steampowered.com/app/" in url:
                             steam_id = url.split("/app/")[1].split("/")[0]
                             break
         
