@@ -179,3 +179,75 @@ class SteamClient:
 
     def get_top_paid_games(self, limit=10):
         return self.get_most_played_games(limit=limit, free_only=False)
+    def get_peak_players_by_year(self, year, limit=10):
+        """
+        Get the top games released in a given year sorted by peak players.
+        This is slower since it queries the Steam Store API for each app's release date.
+        """
+        try:
+            # 1. Get the full app list from Steam
+            applist_url = f"{self.BASE_URL}/ISteamApps/GetAppList/v2/"
+            r = self.session.get(applist_url, timeout=10)
+            r.raise_for_status()
+            all_apps = r.json().get("applist", {}).get("apps", [])
+        except Exception:
+            return []
+
+        results = []
+
+        for app in all_apps:
+            appid = app.get("appid")
+            if not appid:
+                continue
+
+            details = self.get_app_details(appid)
+            if not details:
+                continue
+
+            # Fetch release date from store API
+            store_url = f"https://store.steampowered.com/api/appdetails?appids={appid}&cc=us&l=en"
+            try:
+                store_data = self.session.get(store_url, timeout=6).json().get(str(appid), {}).get("data", {})
+            except Exception:
+                continue
+
+            if not store_data or "release_date" not in store_data:
+                continue
+
+            release_info = store_data["release_date"]
+            if release_info.get("coming_soon", True):
+                continue
+
+            release_date_str = release_info.get("date", "").strip()
+
+            # Try parsing the release year
+            release_year = None
+            for fmt in ("%d %b, %Y", "%b %Y", "%Y"):
+                try:
+                    release_year = int(time.strptime(release_date_str, fmt).tm_year)
+                    break
+                except Exception:
+                    continue
+
+            if release_year != year:
+                continue
+
+            # Get peak players (scraped)
+            peak_players = self.get_peak_players(appid)
+            if not peak_players:
+                continue
+
+            results.append({
+                "appid": appid,
+                "name": details.get("name", "Unknown"),
+                "peak_players": peak_players
+            })
+
+            # Optional: break early if results exceed some large number for speed
+            if len(results) >= 200:
+                break
+
+        # Sort by peak players, descending
+        results.sort(key=lambda x: x["peak_players"], reverse=True)
+
+        return results[:limit]
