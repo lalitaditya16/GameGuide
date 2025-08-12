@@ -51,7 +51,7 @@ def init_session_state():
     # Initialize user preferences
     if SESSION_KEYS['user_preferences'] not in st.session_state:
         st.session_state[SESSION_KEYS['user_preferences']] = {
-            'theme': 'light',
+            'theme': 'dark',
             'items_per_page': config.default_page_size,
             'enable_ai': True
         }
