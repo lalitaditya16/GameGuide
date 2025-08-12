@@ -149,45 +149,30 @@ class RAWGClient:
 
         return achievements
     def get_games_with_steam_ids(self, year, page_size=20):
-        """
-        Get games released in a specific year that have a Steam ID.
-        Returns a list of dicts with name, released date, and steam_appid.
-        """
-        games_with_steam = []
-    
-        # RAWG date filter format: YYYY-MM-DD,YYYY-MM-DD
-        start_date = f"{year}-01-01"
-        end_date = f"{year}-12-31"
-    
+        endpoint = "/games"
         params = {
-            "dates": f"{start_date},{end_date}",
+            "dates": f"{year}-01-01,{year}-12-31",
             "ordering": "-added",
             "page_size": page_size
         }
-    
-        data = self._get("/games", params=params)
-        if not data or "results" not in data:
-            return games_with_steam
-    
-        for game in data["results"]:
-            steam_id = None
-        
-        # Some RAWG results include store links in 'stores'
-            stores = game.get("stores") or []
-            for store in stores:
-                if store["store"]["slug"] == "steam":
-                    # URL format: https://store.steampowered.com/app/<appid>/
-                    url = store.get("url")
-                    if url and "store.steampowered.com/app/" in url:
-                        steam_id = url.split("/app/")[1].split("/")[0]
-                        break
-        
-            if steam_id:
-                games_with_steam.append({
-                    "name": game["name"],
-                    "released": game.get("released"),
-                    "steam_appid": steam_id
-                })
-    
-        return games_with_steam
+        games = self._get(endpoint, params).get("results", [])
+        games_with_steam_ids = []
 
+        for game in games:
+            steam_id = None
+        # Safely check for stores
+            if "stores" in game and isinstance(game["stores"], list):
+                for store in game["stores"]:
+                    if store.get("store", {}).get("slug") == "steam":
+                        url = store.get("url")
+                        if url and "store.steampowered.com/app/" in url:
+                            steam_id = url.split("/app/")[1].split("/")[0]
+                            break
+
+            games_with_steam_ids.append({
+                "id": game.get("id"),
+                "name": game.get("name"),
+                "steam_id": steam_id
+            })
+
+        return games_with_steam_ids
