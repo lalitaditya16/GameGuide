@@ -148,52 +148,49 @@ class RAWGClient:
                 break
 
         return achievements
-    def get_games_with_steam_ids(self, year, page_size=20):
-        results = []
+    def get_games_with_steam_ids(self, year=None, page_size=20):
+        """
+        Fetch games from RAWG for a given year, find their Steam IDs,
+        and return peak player data from Steam.
+        """
+        params = {
+            "page_size": page_size,
+            "ordering": "-added"
+        }
 
-        # Step 1: Get games released in that year
-        start_date = f"{year}-01-01"
-        end_date = f"{year}-12-31"
+    # If a year is provided, add date range filter
+        if year:
+            params["dates"] = f"{year}-01-01,{year}-12-31"
 
-        search_data = self._get("/games", params={
-            "dates": f"{start_date},{end_date}",
-            "ordering": "-rating",
-            "page_size": page_size
-        })
+    # Include stores in response
+        params["stores"] = "steam"
 
-        if not search_data.get("results"):
-            return results
+        games_data = self._get("/games", params).get("results", [])
 
-        for game in search_data["results"]:
-            game_id = game["id"]
-
-        # Step 2: Fetch detailed info
-            details = self._get(f"/games/{game_id}")
-
+        games_list = []
+        for game in games_data:
             steam_id = None
-            non_steam_stores = []
-
-            stores_data = details.get("stores", [])
-            if stores_data:
-                for store_entry in stores_data:
-                    store = store_entry.get("store", {})
-                    if store.get("slug") == "steam":
-                        store_url = store_entry.get("url", "")
+        # Check if store data exists
+            if "stores" in game and game["stores"]:
+                for store in game["stores"]:
+                    if store["store"]["slug"] == "steam":
+                    # Extract the Steam App ID from the store URL
+                        store_url = store.get("url", "")
                         if "store.steampowered.com/app/" in store_url:
-                            try:
-                                steam_id = int(store_url.split("/app/")[1].split("/")[0])
-                            except ValueError:
-                                pass
-                    else:
-                        non_steam_stores.append({
-                            "slug": store.get("slug"),
-                            "url": store_entry.get("url")
-                        })
+                            steam_id = store_url.split("/app/")[1].split("/")[0]
+                        break
 
-            results.append({
-                "name": details.get("name", game["name"]),
-                "steam_id": steam_id,
-                "non_steam_stores": non_steam_stores
+            peak_players = None
+            if steam_id:
+                try:
+                    peak_players = steam_client.get_all_time_peak_players(steam_id)
+                except Exception as e:
+                    print(f"Error fetching Steam data for {steam_id}: {e}")
+
+            games_list.append({
+                "Name": game.get("name"),
+                "Steam ID": steam_id,
+                "Peak Players": peak_players
             })
 
-        return results
+        return games_list
