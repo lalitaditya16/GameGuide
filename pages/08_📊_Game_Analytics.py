@@ -154,3 +154,6 @@ try:
             if row["Image"]:
                 st.image(row["Image"], width=600)
             st.markdown("---")
+except Exception as e:
+    st.error("Failed to load player counts.")
+    st.exception(e)
