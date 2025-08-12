@@ -179,6 +179,26 @@ class SteamClient:
 
     def get_top_paid_games(self, limit=10):
         return self.get_most_played_games(limit=limit, free_only=False)
+    def get_all_time_peak_players(self, app_id):
+        """
+        Fetch all-time peak players for a given Steam App ID
+        using SteamCharts' unofficial API.
+        """
+        try:
+            # Unofficial SteamCharts endpoint
+            charts_url = f"https://steamcharts.com/app/{app_id}"
+            html = requests.get(charts_url).text
+
+            # Scrape the all-time peak value
+            import re
+            match = re.search(r"All-Time Peak</td>\s*<td>([\d,]+)</td>", html)
+            if match:
+                return int(match.group(1).replace(",", ""))
+            else:
+                return None
+        except Exception as e:
+            print(f"Error fetching peak players for {app_id}: {e}")
+            return None
     def get_peak_players_by_year(self, year, limit=10):
         """
         Get the top games released in a given year sorted by peak players.
@@ -251,3 +271,4 @@ class SteamClient:
         results.sort(key=lambda x: x["peak_players"], reverse=True)
 
         return results[:limit]
+        
