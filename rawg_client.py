@@ -173,14 +173,14 @@ class RAWGClient:
             steam_id = None
         
         # Some RAWG results include store links in 'stores'
-            if "stores" in game:
-                for store in game["stores"]:
-                    if store["store"]["slug"] == "steam":
+            stores = game.get("stores") or []
+            for store in stores:
+                if store["store"]["slug"] == "steam":
                     # URL format: https://store.steampowered.com/app/<appid>/
-                        url = store.get("url")
-                        if url and "store.steampowered.com/app/" in url:
-                            steam_id = url.split("/app/")[1].split("/")[0]
-                            break
+                    url = store.get("url")
+                    if url and "store.steampowered.com/app/" in url:
+                        steam_id = url.split("/app/")[1].split("/")[0]
+                        break
         
             if steam_id:
                 games_with_steam.append({
