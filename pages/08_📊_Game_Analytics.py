@@ -107,41 +107,36 @@ try:
     st.subheader(f"🔥 All-Time Peak Players for Games Released in {selected_year}")
 
     # Get list of games + Steam IDs
+    # ✅ Fetch games for the selected year
     games_year = rawg_client.get_games_with_steam_ids(
-        year=selected_year,
+        dates=f"{selected_year}-01-01,{selected_year}-12-31",
         page_size=20
     )
 
+# ✅ Build peak player data safely
     games_peak_data = []
     for game in games_year:
-        peak_players = None
-        if game["steam_id"]:
-            try:
-                peak_players = steam_client.get_all_time_peak_players(game["steam_id"])
-            except Exception as e:
-                st.write(f"Error fetching peak players for {game['name']}: {e}")
-
+        peak_players = game.get("Peak Players")  # None if not available
         games_peak_data.append({
-            "Name": game.get("name"),
-            "Steam ID": game.get("steam_id"),
-            "Peak Players": peak_players if peak_players is not None else 0
+            "Name": game.get("name", "Unknown"),
+            "Peak Players": peak_players if isinstance(peak_players, (int, float)) else None
         })
 
-    # Sort by Peak Players
-    df_peak = pd.DataFrame(games_peak_data).sort_values(
-        by="Peak Players", ascending=False, na_position='last'
-    )
+    # ✅ Create DataFrame and sort safely
+    if games_peak_data:
+        df_peak = pd.DataFrame(games_peak_data)
 
-    if df_peak.empty:
-        st.warning(f"No Steam data found for {selected_year}.")
+        if "Peak Players" not in df_peak.columns:
+            df_peak["Peak Players"] = None
+
+        df_peak = df_peak.sort_values(
+            by="Peak Players",
+            ascending=False,
+            na_position="last"
+        )
     else:
-        st.dataframe(df_peak)
+        df_peak = pd.DataFrame(columns=["Name", "Peak Players"])
 
-        st.markdown("### 🏆 Top 5 Games by Peak Players")
-        for _, row in df_peak.head(5).iterrows():
-            st.markdown(f"#### {row['Name']}")
-            st.write(f"👥 Peak Players: {row['Peak Players']}")
-            st.markdown("---")
 
 except Exception as e:
     st.error("Failed to load player counts.")
