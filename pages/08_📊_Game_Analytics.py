@@ -109,7 +109,7 @@ try:
     # Get list of games + Steam IDs
     # ✅ Fetch games for the selected year
     games_year = rawg_client.get_games_with_steam_ids(
-        dates=f"{selected_year}-01-01,{selected_year}-12-31",
+        year=f"{selected_year}-01-01,{selected_year}-12-31",
         page_size=20
     )
 
