@@ -148,31 +148,50 @@ class RAWGClient:
                 break
 
         return achievements
-    def get_games_with_steam_ids(self, year, page_size=20):
-        endpoint = "/games"
-        params = {
-            "dates": f"{year}-01-01,{year}-12-31",
-            "ordering": "-added",
-            "page_size": page_size
-        }
-        games = self._get(endpoint, params).get("results", [])
-        games_with_steam_ids = []
+    def get_games_with_steam_ids(self, game_names):
+        results = []
 
-        for game in games:
+        for name in game_names:
+        # Step 1: Search for the game
+            search_data = self._get("/games", params={"search": name, "page_size": 1})
+            if not search_data.get("results"):
+                results.append({"name": name, "steam_id": None, "note": "No results from search"})
+                continue
+
+            game_info = search_data["results"][0]
+            game_id = game_info["id"]
+
+        # Step 2: Fetch detailed data to get stores
+            details = self._get(f"/games/{game_id}")
+
             steam_id = None
-        # Safely check for stores
-            if "stores" in game and isinstance(game["stores"], list):
-                for store in game["stores"]:
-                    if store.get("store", {}).get("slug") == "steam":
-                        url = store.get("url")
-                        if url and "store.steampowered.com/app/" in url:
-                            steam_id = url.split("/app/")[1].split("/")[0]
-                            break
+            non_steam_stores = []
+        
+            stores_data = details.get("stores", [])
+            if stores_data:
+                for store_entry in stores_data:
+                    store = store_entry.get("store", {})
+                    store_slug = store.get("slug")
+                    if store_slug == "steam":
+                    # Extract Steam ID from URL
+                        store_url = store_entry.get("url", "")
+                        if "store.steampowered.com/app/" in store_url:
+                            try:
+                                steam_id = int(store_url.split("/app/")[1].split("/")[0])
+                            except ValueError:
+                                steam_id = None
+                    else:
+                        non_steam_stores.append({
+                            "slug": store_slug,
+                            "url": store_entry.get("url")
+                        })
 
-            games_with_steam_ids.append({
-                "id": game.get("id"),
-                "name": game.get("name"),
-                "steam_id": steam_id
+            results.append({
+                "name": details.get("name", name),
+                "steam_id": steam_id,
+                "non_steam_stores": non_steam_stores
             })
 
-        return games_with_steam_ids
+        return results
+
+   
