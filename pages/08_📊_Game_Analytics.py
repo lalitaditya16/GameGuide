@@ -107,7 +107,7 @@ try:
     st.subheader(f"🔥 All-Time Peak Players for Games Released in {selected_year}")
 
 # Fetch games from RAWG
-    games_year = rawg_client.search_games_analytics(
+    games_year = rawg_client.get_games_with_steam_ids(
     dates=f"{selected_year}-01-01,{selected_year}-12-31",
     ordering="-added",  # Sort by popularity
     page_size=20
