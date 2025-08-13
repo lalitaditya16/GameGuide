@@ -113,31 +113,41 @@ try:
         page_size=20
     )
 
-# ✅ Build peak player data safely
-    games_peak_data = []
-    for game in games_year:
-        peak_players = game.get("Peak Players")  # None if not available
-        games_peak_data.append({
-            "Name": game.get("name", "Unknown"),
-            "Peak Players": peak_players if isinstance(peak_players, (int, float)) else None
-        })
-
-    # ✅ Create DataFrame and sort safely
-    if games_peak_data:
-        df_peak = pd.DataFrame(games_peak_data)
-
-        if "Peak Players" not in df_peak.columns:
-            df_peak["Peak Players"] = None
-
-        df_peak = df_peak.sort_values(
-            by="Peak Players",
-            ascending=False,
-            na_position="last"
+    try:
+        games_peak_data = []
+        for game in games_year:
+            steam_id = game.get("steam_id")
+            if steam_id:
+                peak_players = steam_client.get_all_time_peak_players(steam_id)
+                games_peak_data.append({
+                    "Name": game["name"],
+                    "Peak Players": peak_players
+                })
+        df_peak = pd.DataFrame(games_peak_data).sort_values(
+            by="Peak Players", ascending=False, na_position='last'
         )
-    else:
-        df_peak = pd.DataFrame(columns=["Name", "Peak Players"])
 
+    # ✅ Display Peak Player Data
+        if not df_peak.empty and df_peak["Peak Players"].notna().any():
+            st.markdown("### 📊 All-Time Peak Players Chart")
+            fig4, ax4 = plt.subplots(facecolor=bg_color)
+            fig4.patch.set_facecolor(bg_color)
+            ax4.set_facecolor(bg_color)
 
-except Exception as e:
-    st.error("Failed to load player counts.")
-    st.exception(e)
+            ax4.barh(df_peak["Name"], df_peak["Peak Players"], color="limegreen")
+            ax4.set_xlabel("Peak Players", color=text_color)
+            ax4.set_ylabel("Game", color=text_color)
+            ax4.tick_params(colors=text_color)
+            ax4.invert_yaxis()
+
+            st.pyplot(fig4)
+
+            st.markdown("### 📋 Peak Players Table")
+            st.dataframe(df_peak)
+        else:
+            st.info("No peak player data available for this year.")
+
+    except Exception as e:
+        st.error(f"Error fetching peak player data: {e}")
+ except Exception as e:
+        st.error(f"Error fetching peak player data: {e}")
