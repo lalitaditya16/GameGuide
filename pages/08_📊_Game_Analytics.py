@@ -150,4 +150,4 @@ try:
     except Exception as e:
         st.error(f"Error fetching peak player data: {e}")
  except Exception as e:
-        st.error(f"Error fetching peak player data: {e}")
+    st.error(f"Error fetching peak player data: {e}")
