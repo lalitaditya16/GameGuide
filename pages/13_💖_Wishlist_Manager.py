@@ -5,6 +5,8 @@ import streamlit as st
 
 from helpers import (
     init_session_state,
+    load_custom_css,
+    render_theme_toggle,
     get_favorites,
     remove_from_favorites,
     update_favorite_note,
@@ -15,6 +17,8 @@ from helpers import (
 
 st.set_page_config(page_title="Wishlist Manager", page_icon="💖", layout="wide")
 init_session_state()
+load_custom_css()
+render_theme_toggle()
 
 st.title("💖 Wishlist Manager")
 st.markdown("Manage saved games with notes, sorting, and backup import/export.")

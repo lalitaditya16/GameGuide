@@ -3,12 +3,16 @@ from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 from rawg_client import RAWGClient
+from helpers import init_session_state, load_custom_css, render_theme_toggle
 
 # --- Initialize API ---
 api_key = st.secrets["RAWG_API_KEY"]
 rawg_client = RAWGClient(api_key)
 
 st.set_page_config(page_title="Game Analytics", layout="wide")
+init_session_state()
+load_custom_css()
+render_theme_toggle()
 st.title("📊 Game Analytics Dashboard")
 
 # --- Sidebar Filters ---

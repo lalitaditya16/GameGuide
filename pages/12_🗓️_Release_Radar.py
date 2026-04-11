@@ -1,6 +1,6 @@
 import streamlit as st
 from rawg_client import RAWGClient
-from helpers import init_session_state, add_to_favorites, remove_from_favorites, is_favorite
+from helpers import init_session_state, add_to_favorites, remove_from_favorites, is_favorite, load_custom_css, render_theme_toggle
 
 
 @st.cache_resource
@@ -15,6 +15,8 @@ def get_taxonomy(_client):
 
 st.set_page_config(page_title="Release Radar", page_icon="🗓️", layout="wide")
 init_session_state()
+load_custom_css()
+render_theme_toggle()
 client = get_client()
 genres, platforms = get_taxonomy(client)
 

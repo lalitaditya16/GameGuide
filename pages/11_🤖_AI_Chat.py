@@ -4,9 +4,13 @@ from langchain_groq import ChatGroq
 from langchain.schema import SystemMessage, AIMessage, HumanMessage
 from config import config
 from rawg_client import RAWGClient  # Ensure this path is correct
+from helpers import init_session_state, load_custom_css, render_theme_toggle
 
 # Streamlit config
 st.set_page_config(page_title="AI Game Chat", page_icon="🎮")
+init_session_state()
+load_custom_css()
+render_theme_toggle()
 st.title("🤖 AI Game Assistant")
 st.caption("Chat with an AI expert about the 2025 gaming landscape.")
 

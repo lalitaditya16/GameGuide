@@ -95,6 +95,105 @@ def init_session_state():
 def load_custom_css():
     """Load custom CSS styles."""
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+    st.markdown(_theme_override_css(get_theme_mode()), unsafe_allow_html=True)
+
+
+def get_theme_mode() -> str:
+    """Get current app theme mode from session state."""
+    prefs = st.session_state.get(SESSION_KEYS['user_preferences'], {})
+    return prefs.get('theme', 'dark')
+
+
+def render_theme_toggle():
+    """Render a persistent dark/light mode toggle in the sidebar."""
+    current_mode = get_theme_mode()
+    is_dark = st.sidebar.toggle("🌗 Dark Mode", value=current_mode == "dark", key="gg_theme_toggle")
+    new_mode = "dark" if is_dark else "light"
+
+    if SESSION_KEYS['user_preferences'] not in st.session_state:
+        st.session_state[SESSION_KEYS['user_preferences']] = {
+            'theme': new_mode,
+            'items_per_page': config.default_page_size,
+            'enable_ai': True,
+        }
+    elif st.session_state[SESSION_KEYS['user_preferences']].get('theme') != new_mode:
+        st.session_state[SESSION_KEYS['user_preferences']]['theme'] = new_mode
+        st.rerun()
+
+
+def _theme_override_css(theme_mode: str) -> str:
+    """Theme-specific CSS overrides for light/dark mode."""
+    if theme_mode == "light":
+        return """
+        <style>
+            [data-testid="stAppViewContainer"] {
+                background: #f8fafc;
+                color: #111827;
+            }
+
+            [data-testid="stSidebar"] {
+                background: #f1f5f9;
+                border-right: 1px solid #dbe3ee;
+            }
+
+            .stButton > button {
+                background: linear-gradient(90deg, #f97316 0%, #fb923c 100%);
+                color: #ffffff;
+            }
+
+            .game-card,
+            [data-testid="stMetric"] {
+                background: #ffffff;
+                border: 1px solid #d9e1ec;
+                color: #111827;
+            }
+        </style>
+        """
+
+    return """
+    <style>
+        [data-testid="stAppViewContainer"] {
+            background: #0e1117;
+            color: #e5e7eb;
+        }
+
+        [data-testid="stSidebar"] {
+            background: #111827;
+            border-right: 1px solid #2a3342;
+        }
+
+        [data-testid="stSidebar"] * {
+            color: #e5e7eb;
+        }
+
+        .stButton > button {
+            background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+        }
+
+        .game-card,
+        [data-testid="stMetric"] {
+            background: #111827;
+            border: 1px solid #2a3342;
+            color: #e5e7eb;
+        }
+
+        .ai-message {
+            background: #1f2937;
+            border-color: #374151;
+            color: #e5e7eb;
+        }
+
+        [data-baseweb="input"] > div,
+        [data-baseweb="select"] > div,
+        .stTextInput input,
+        .stTextArea textarea {
+            background: #1f2937 !important;
+            color: #e5e7eb !important;
+            border-color: #374151 !important;
+        }
+    </style>
+    """
 
 def validate_environment():
     """Validate environment setup for the application."""

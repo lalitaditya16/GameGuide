@@ -1,10 +1,12 @@
 import streamlit as st
 from rawg_client import RAWGClient
-from helpers import init_session_state, add_to_favorites, remove_from_favorites, is_favorite
+from helpers import init_session_state, add_to_favorites, remove_from_favorites, is_favorite, load_custom_css, render_theme_toggle
 
 st.set_page_config(page_title="Advanced Game Search", layout="wide")
 st.title("🔍 Advanced Game Search")
 init_session_state()
+load_custom_css()
+render_theme_toggle()
 
 api_key = st.secrets["RAWG_API_KEY"]
 client = RAWGClient(api_key)
