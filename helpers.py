@@ -27,6 +27,28 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 FAVORITES_FILE = os.path.join(DATA_DIR, "favorites.json")
+PROFILES_FILE = os.path.join(DATA_DIR, "profiles.json")
+DEFAULT_PROFILE_NAME = "Player1"
+
+
+def _default_preferences() -> Dict[str, Any]:
+    return {
+        'theme': 'dark',
+        'items_per_page': config.default_page_size,
+        'enable_ai': True,
+        'favorite_genres': [],
+        'favorite_platforms': [],
+    }
+
+
+def _default_profile(name: str) -> Dict[str, Any]:
+    return {
+        'display_name': name,
+        'created_at': datetime.now().isoformat(),
+        'preferences': _default_preferences(),
+        'wishlist': [],
+        'played_games': [],
+    }
 
 
 def _load_favorites_from_disk() -> List[Dict[str, Any]]:
@@ -53,6 +75,134 @@ def _save_favorites_to_disk(favorites: List[Dict[str, Any]]) -> None:
         logger.warning(f"Failed to save favorites: {e}")
 
 
+def _load_profiles_from_disk() -> Dict[str, Any]:
+    """Load profile store from disk with migration from legacy favorites file."""
+    store = {'active_profile': DEFAULT_PROFILE_NAME, 'profiles': {}}
+    try:
+        if os.path.exists(PROFILES_FILE):
+            with open(PROFILES_FILE, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+            if isinstance(loaded, dict) and isinstance(loaded.get('profiles'), dict):
+                store = loaded
+    except Exception as e:
+        logger.warning(f"Failed to load profiles: {e}")
+
+    if not store['profiles']:
+        profile = _default_profile(DEFAULT_PROFILE_NAME)
+        profile['wishlist'] = _load_favorites_from_disk()
+        store['profiles'][DEFAULT_PROFILE_NAME] = profile
+        store['active_profile'] = DEFAULT_PROFILE_NAME
+
+    active = store.get('active_profile')
+    if active not in store['profiles']:
+        store['active_profile'] = next(iter(store['profiles'].keys()))
+
+    for name, profile in store['profiles'].items():
+        profile.setdefault('display_name', name)
+        profile.setdefault('created_at', datetime.now().isoformat())
+        profile.setdefault('preferences', _default_preferences())
+        profile.setdefault('wishlist', [])
+        profile.setdefault('played_games', [])
+        prefs = profile.get('preferences', {})
+        for key, value in _default_preferences().items():
+            prefs.setdefault(key, value)
+
+    return store
+
+
+def _save_profiles_to_disk(store: Dict[str, Any]) -> None:
+    """Persist profile store and mirror active wishlist for backward compatibility."""
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        with open(PROFILES_FILE, "w", encoding="utf-8") as f:
+            json.dump(store, f, indent=2)
+
+        active_profile = store['profiles'].get(store.get('active_profile'))
+        if active_profile:
+            _save_favorites_to_disk(active_profile.get('wishlist', []))
+    except Exception as e:
+        logger.warning(f"Failed to save profiles: {e}")
+
+
+def _get_profile_store() -> Dict[str, Any]:
+    if 'profile_store' not in st.session_state:
+        st.session_state['profile_store'] = _load_profiles_from_disk()
+    return st.session_state['profile_store']
+
+
+def _get_active_profile_data() -> Dict[str, Any]:
+    store = _get_profile_store()
+    return store['profiles'][store['active_profile']]
+
+
+def _persist_profile_store() -> None:
+    _save_profiles_to_disk(_get_profile_store())
+
+
+def get_profiles() -> List[str]:
+    """Return all profile names."""
+    return sorted(_get_profile_store()['profiles'].keys())
+
+
+def get_active_profile_name() -> str:
+    """Return active profile name."""
+    return _get_profile_store()['active_profile']
+
+
+def create_profile(name: str) -> bool:
+    """Create a new profile and set it active."""
+    normalized = (name or "").strip()
+    if not normalized:
+        return False
+
+    store = _get_profile_store()
+    if normalized in store['profiles']:
+        return False
+
+    store['profiles'][normalized] = _default_profile(normalized)
+    store['active_profile'] = normalized
+    _persist_profile_store()
+    return True
+
+
+def set_active_profile(name: str) -> bool:
+    """Switch active profile."""
+    store = _get_profile_store()
+    if name not in store['profiles']:
+        return False
+    store['active_profile'] = name
+    _persist_profile_store()
+    return True
+
+
+def delete_profile(name: str) -> bool:
+    """Delete a profile if at least one remains."""
+    store = _get_profile_store()
+    if name not in store['profiles'] or len(store['profiles']) <= 1:
+        return False
+
+    del store['profiles'][name]
+    if store['active_profile'] == name:
+        store['active_profile'] = next(iter(store['profiles'].keys()))
+    _persist_profile_store()
+    return True
+
+
+def get_user_preferences() -> Dict[str, Any]:
+    """Get preferences for active profile."""
+    return _get_active_profile_data().get('preferences', _default_preferences())
+
+
+def update_user_preferences(preferences: Dict[str, Any]) -> None:
+    """Update and persist active profile preferences."""
+    profile = _get_active_profile_data()
+    current = profile.get('preferences', _default_preferences())
+    current.update(preferences)
+    profile['preferences'] = current
+    st.session_state[SESSION_KEYS['user_preferences']] = current
+    _persist_profile_store()
+
+
 def clean_description(text):
     # Replace headings like "###Setting" or "### Characters" with bold text
     cleaned = re.sub(r"###\s*(\w+)", r"**\1:**", text)
@@ -60,9 +210,11 @@ def clean_description(text):
 def init_session_state():
     """Initialize Streamlit session state variables."""
 
+    store = _get_profile_store()
+    active_profile = store['profiles'][store['active_profile']]
+
     # Initialize favorites
-    if SESSION_KEYS['favorites'] not in st.session_state:
-        st.session_state[SESSION_KEYS['favorites']] = _load_favorites_from_disk()
+    st.session_state[SESSION_KEYS['favorites']] = active_profile.get('wishlist', [])
 
     # Initialize search history
     if SESSION_KEYS['search_history'] not in st.session_state:
@@ -77,12 +229,7 @@ def init_session_state():
         st.session_state[SESSION_KEYS['filters']] = {}
 
     # Initialize user preferences
-    if SESSION_KEYS['user_preferences'] not in st.session_state:
-        st.session_state[SESSION_KEYS['user_preferences']] = {
-            'theme': 'dark',
-            'items_per_page': config.default_page_size,
-            'enable_ai': True
-        }
+    st.session_state[SESSION_KEYS['user_preferences']] = active_profile.get('preferences', _default_preferences())
 
     # Initialize chat history
     if SESSION_KEYS['chat_history'] not in st.session_state:
@@ -100,7 +247,7 @@ def load_custom_css():
 
 def get_theme_mode() -> str:
     """Get current app theme mode from session state."""
-    prefs = st.session_state.get(SESSION_KEYS['user_preferences'], {})
+    prefs = get_user_preferences()
     return prefs.get('theme', 'dark')
 
 
@@ -110,14 +257,8 @@ def render_theme_toggle():
     is_dark = st.sidebar.toggle("🌗 Dark Mode", value=current_mode == "dark", key="gg_theme_toggle")
     new_mode = "dark" if is_dark else "light"
 
-    if SESSION_KEYS['user_preferences'] not in st.session_state:
-        st.session_state[SESSION_KEYS['user_preferences']] = {
-            'theme': new_mode,
-            'items_per_page': config.default_page_size,
-            'enable_ai': True,
-        }
-    elif st.session_state[SESSION_KEYS['user_preferences']].get('theme') != new_mode:
-        st.session_state[SESSION_KEYS['user_preferences']]['theme'] = new_mode
+    if get_user_preferences().get('theme') != new_mode:
+        update_user_preferences({'theme': new_mode})
         st.rerun()
 
 
@@ -477,7 +618,8 @@ def show_message(message: str, message_type: str = "info"):
 
 def add_to_favorites(game_id: int, game_data: Dict[str, Any]):
     """Add a game to user favorites."""
-    favorites = st.session_state[SESSION_KEYS['favorites']]
+    profile = _get_active_profile_data()
+    favorites = profile.get('wishlist', [])
 
     if game_id not in [fav['id'] for fav in favorites]:
         favorites.append({
@@ -487,7 +629,9 @@ def add_to_favorites(game_id: int, game_data: Dict[str, Any]):
             'rating': game_data.get('rating', 0),
             'added_at': datetime.now().isoformat()
         })
-        _save_favorites_to_disk(favorites)
+        profile['wishlist'] = favorites
+        st.session_state[SESSION_KEYS['favorites']] = favorites
+        _persist_profile_store()
         show_message(SUCCESS_MESSAGES['game_added_to_favorites'], "success")
     else:
         show_message("Game is already in favorites!", "warning")
@@ -495,29 +639,31 @@ def add_to_favorites(game_id: int, game_data: Dict[str, Any]):
 
 def get_favorites() -> List[Dict[str, Any]]:
     """Return current wishlist entries."""
-    return st.session_state.get(SESSION_KEYS['favorites'], [])
+    return _get_active_profile_data().get('wishlist', [])
 
 
 def replace_favorites(favorites: List[Dict[str, Any]]) -> None:
     """Replace all favorites and persist to disk."""
+    profile = _get_active_profile_data()
+    profile['wishlist'] = favorites
     st.session_state[SESSION_KEYS['favorites']] = favorites
-    _save_favorites_to_disk(favorites)
+    _persist_profile_store()
 
 
 def update_favorite_note(game_id: int, note: str) -> bool:
     """Update note for a single wishlist game."""
-    favorites = st.session_state.get(SESSION_KEYS['favorites'], [])
+    favorites = get_favorites()
     for fav in favorites:
         if fav.get('id') == game_id:
             fav['note'] = note.strip()
-            _save_favorites_to_disk(favorites)
+            replace_favorites(favorites)
             return True
     return False
 
 
 def export_favorites_json() -> str:
     """Export favorites as JSON string."""
-    return json.dumps(st.session_state.get(SESSION_KEYS['favorites'], []), indent=2)
+    return json.dumps(get_favorites(), indent=2)
 
 
 def import_favorites_json(json_text: str, mode: str = "merge") -> Dict[str, int]:
@@ -549,7 +695,7 @@ def import_favorites_json(json_text: str, mode: str = "merge") -> Dict[str, int]
         replace_favorites(incoming)
         return {'imported': len(incoming), 'skipped': len(data) - len(incoming)}
 
-    existing = st.session_state.get(SESSION_KEYS['favorites'], [])
+    existing = get_favorites()
     existing_ids = {fav.get('id') for fav in existing}
     added = 0
     skipped = len(data) - len(incoming)
@@ -567,17 +713,67 @@ def import_favorites_json(json_text: str, mode: str = "merge") -> Dict[str, int]
 
 def remove_from_favorites(game_id: int):
     """Remove a game from user favorites."""
-    favorites = st.session_state[SESSION_KEYS['favorites']]
-    st.session_state[SESSION_KEYS['favorites']] = [
+    favorites = get_favorites()
+    updated = [
         fav for fav in favorites if fav['id'] != game_id
     ]
-    _save_favorites_to_disk(st.session_state[SESSION_KEYS['favorites']])
+    replace_favorites(updated)
     show_message(SUCCESS_MESSAGES['game_removed_from_favorites'], "success")
 
 def is_favorite(game_id: int) -> bool:
     """Check if a game is in user favorites."""
-    favorites = st.session_state[SESSION_KEYS['favorites']]
+    favorites = get_favorites()
     return game_id in [fav['id'] for fav in favorites]
+
+
+def get_played_games() -> List[Dict[str, Any]]:
+    """Return active profile played games."""
+    return _get_active_profile_data().get('played_games', [])
+
+
+def add_played_game(game_data: Dict[str, Any], hours_played: float = 0.0, user_rating: Optional[float] = None, note: str = ""):
+    """Add or update a played game entry for active profile."""
+    profile = _get_active_profile_data()
+    played_games = profile.get('played_games', [])
+    game_id = game_data.get('id')
+    if not game_id:
+        return False
+
+    entry = {
+        'id': game_id,
+        'name': game_data.get('name', 'Unknown'),
+        'image': game_data.get('background_image', ''),
+        'released': game_data.get('released', 'N/A'),
+        'rawg_rating': game_data.get('rating', 0),
+        'hours_played': float(hours_played or 0.0),
+        'user_rating': user_rating,
+        'note': (note or '').strip(),
+        'last_played_at': datetime.now().isoformat(),
+    }
+
+    replaced = False
+    for index, item in enumerate(played_games):
+        if item.get('id') == game_id:
+            played_games[index] = entry
+            replaced = True
+            break
+
+    if not replaced:
+        played_games.append(entry)
+
+    # Remove from wishlist once logged as played.
+    profile['wishlist'] = [fav for fav in profile.get('wishlist', []) if fav.get('id') != game_id]
+    profile['played_games'] = played_games
+    st.session_state[SESSION_KEYS['favorites']] = profile['wishlist']
+    _persist_profile_store()
+    return True
+
+
+def remove_played_game(game_id: int) -> None:
+    """Remove a played game from active profile."""
+    profile = _get_active_profile_data()
+    profile['played_games'] = [g for g in profile.get('played_games', []) if g.get('id') != game_id]
+    _persist_profile_store()
 
 def format_game_card(game: Dict[str, Any]) -> str:
     """Format a game as an HTML card."""
