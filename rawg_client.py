@@ -17,7 +17,7 @@ class RAWGClient:
         response.raise_for_status()
         return response.json()
 
-    def search_games_browse(self, query="", ordering="-added", genre=None, platform=None, page_size=20):
+    def search_games_browse(self, query="", ordering="-added", genre=None, platform=None, page_size=20, dates=None):
         params = {
             "key": self.api_key,
             "search": query,
@@ -28,11 +28,28 @@ class RAWGClient:
             params["genres"] = genre
         if platform:
             params["platforms"] = platform
+        if dates:
+            params["dates"] = dates
 
         url = f"{self.BASE_URL}/games"
         response = requests.get(url, params=params)
         response.raise_for_status()
         return response.json().get("results", [])
+
+    def search_upcoming_games(self, days_ahead=180, genre=None, platform=None, page_size=40):
+        from datetime import datetime, timedelta
+
+        start_date = datetime.utcnow().date()
+        end_date = start_date + timedelta(days=days_ahead)
+        date_range = f"{start_date.isoformat()},{end_date.isoformat()}"
+        return self.search_games_browse(
+            query="",
+            ordering="released",
+            genre=genre,
+            platform=platform,
+            page_size=page_size,
+            dates=date_range,
+        )
 
     def search_games_analytics(self, ordering="-rating", genres=None, platforms=None, year=None, page_size=40):
         params = {

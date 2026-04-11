@@ -25,6 +25,34 @@ from config import config, SESSION_KEYS, ERROR_MESSAGES, SUCCESS_MESSAGES, AI_PR
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+FAVORITES_FILE = os.path.join(DATA_DIR, "favorites.json")
+
+
+def _load_favorites_from_disk() -> List[Dict[str, Any]]:
+    """Load favorites from local storage if available."""
+    try:
+        if not os.path.exists(FAVORITES_FILE):
+            return []
+        with open(FAVORITES_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return data
+    except Exception as e:
+        logger.warning(f"Failed to load favorites: {e}")
+    return []
+
+
+def _save_favorites_to_disk(favorites: List[Dict[str, Any]]) -> None:
+    """Persist favorites to local storage."""
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        with open(FAVORITES_FILE, "w", encoding="utf-8") as f:
+            json.dump(favorites, f, indent=2)
+    except Exception as e:
+        logger.warning(f"Failed to save favorites: {e}")
+
+
 def clean_description(text):
     # Replace headings like "###Setting" or "### Characters" with bold text
     cleaned = re.sub(r"###\s*(\w+)", r"**\1:**", text)
@@ -34,7 +62,7 @@ def init_session_state():
 
     # Initialize favorites
     if SESSION_KEYS['favorites'] not in st.session_state:
-        st.session_state[SESSION_KEYS['favorites']] = []
+        st.session_state[SESSION_KEYS['favorites']] = _load_favorites_from_disk()
 
     # Initialize search history
     if SESSION_KEYS['search_history'] not in st.session_state:
@@ -324,6 +352,7 @@ def add_to_favorites(game_id: int, game_data: Dict[str, Any]):
             'rating': game_data.get('rating', 0),
             'added_at': datetime.now().isoformat()
         })
+        _save_favorites_to_disk(favorites)
         show_message(SUCCESS_MESSAGES['game_added_to_favorites'], "success")
     else:
         show_message("Game is already in favorites!", "warning")
@@ -334,6 +363,7 @@ def remove_from_favorites(game_id: int):
     st.session_state[SESSION_KEYS['favorites']] = [
         fav for fav in favorites if fav['id'] != game_id
     ]
+    _save_favorites_to_disk(st.session_state[SESSION_KEYS['favorites']])
     show_message(SUCCESS_MESSAGES['game_removed_from_favorites'], "success")
 
 def is_favorite(game_id: int) -> bool:
