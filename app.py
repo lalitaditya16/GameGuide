@@ -63,10 +63,10 @@ def safe_format_number(value):
 def main():
     with st.sidebar:
         st.markdown("""
-        <div style='text-align: center; padding: 1rem;'>
-            <h1 style='font-size: 2.5rem; margin: 0;'>🎮</h1>
-            <h2 style='color: #FF6B6B; margin: 0;'>RAWG Explorer</h2>
-            <p style='color: #666; font-size: 0.9rem;'>Gaming Database</p>
+        <div style='text-align: center; padding: 0.9rem 0.4rem;'>
+            <h1 style='font-size: 2.25rem; margin: 0;'>🎮</h1>
+            <h2 style='margin: 0; color: #f97316;'>GAMEGUIDE</h2>
+            <p style='font-size: 0.9rem; margin-top: 0.3rem;'>Gaming Database Explorer</p>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("---")
@@ -80,10 +80,10 @@ def main():
             st.markdown("*Add GROQ_API_KEY to enable*")
 
     st.markdown("""
-    <div style='text-align: center; padding: 2rem 0;'>
-        <h1 style='color: #FF6B6B; font-size: 3rem; margin: 0;'>🎮 GAMEGUIDE</h1>
-        <p style='font-size: 1.2rem; color: #666;'>Discover, explore, and analyze and enjoy the world of video games</p>
-        <p style='font-size: 1rem; color: #888;'>✨ Powered with  an AI gaming assistant using Groq + Gemma2-9B along with the RAWG database and Steam database</p>
+    <div class='gg-hero'>
+        <h1>🎮 GAMEGUIDE</h1>
+        <p style='font-size: 1.08rem;'>Discover, compare, and track games across RAWG and Steam in one place.</p>
+        <p>AI-assisted exploration powered by Groq + Gemma2-9B</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -101,9 +101,9 @@ def main():
     with feature_col1:
         with st.container():
             st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🎮 Browse Games</h3>
-                <p style='margin: 0.5rem 0;'>Explore our vast collection of games with advanced search and filtering</p>
+            <div class='feature-card gg-feature-a'>
+                <h3 style='margin: 0; font-size: 1.35rem;'>🎮 Browse Games</h3>
+                <p style='margin: 0.45rem 0;'>Explore thousands of games with fast filters and wishlist actions.</p>
             </div>
             """, unsafe_allow_html=True)
            
@@ -111,9 +111,9 @@ def main():
     with feature_col2:
         with st.container():
             st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>📊 Analytics</h3>
-                <p style='margin: 0.5rem 0;'>Dive into gaming trends, statistics, and interactive visualizations</p>
+            <div class='feature-card gg-feature-b'>
+                <h3 style='margin: 0; font-size: 1.35rem;'>📊 Analytics</h3>
+                <p style='margin: 0.45rem 0;'>Understand ratings, genres, and platform trends across release years.</p>
         </div>
        """, unsafe_allow_html=True)
 
@@ -121,9 +121,9 @@ def main():
     with feature_col3:
         with st.container():
             st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🔍 Advanced Search</h3>
-                <p style='margin: 0.5rem 0;'>Find exactly what you're looking for with powerful search tools</p>
+            <div class='feature-card gg-feature-c'>
+                <h3 style='margin: 0; font-size: 1.35rem;'>🔍 Advanced Search</h3>
+                <p style='margin: 0.45rem 0;'>Jump to exact titles, deep details, screenshots, and achievements.</p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -132,9 +132,9 @@ def main():
     with feature_col4:
         with st.container():
             st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🤖 AI Assistant</h3>
-                <p style='margin: 0.5rem 0;'>Chat with AI about games, get recommendations, and gaming insights</p>
+            <div class='feature-card gg-feature-d'>
+                <h3 style='margin: 0; font-size: 1.35rem;'>🤖 AI Assistant</h3>
+                <p style='margin: 0.45rem 0;'>Chat for recommendations, quick comparisons, and gaming insights.</p>
             </div>
             """, unsafe_allow_html=True)
 
