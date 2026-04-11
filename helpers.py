@@ -128,7 +128,20 @@ def _theme_override_css(theme_mode: str) -> str:
         <style>
             [data-testid="stAppViewContainer"] {
                 background: #f8fafc;
-                color: #111827;
+                color: #111827 !important;
+            }
+
+            [data-testid="stAppViewContainer"] h1,
+            [data-testid="stAppViewContainer"] h2,
+            [data-testid="stAppViewContainer"] h3,
+            [data-testid="stAppViewContainer"] h4,
+            [data-testid="stAppViewContainer"] h5,
+            [data-testid="stAppViewContainer"] p,
+            [data-testid="stAppViewContainer"] span,
+            [data-testid="stAppViewContainer"] label,
+            [data-testid="stAppViewContainer"] li,
+            [data-testid="stAppViewContainer"] div {
+                color: #111827 !important;
             }
 
             [data-testid="stSidebar"] {
@@ -136,16 +149,39 @@ def _theme_override_css(theme_mode: str) -> str:
                 border-right: 1px solid #dbe3ee;
             }
 
+            [data-testid="stSidebar"] *,
+            [data-testid="stSidebar"] p,
+            [data-testid="stSidebar"] span,
+            [data-testid="stSidebar"] label,
+            [data-testid="stSidebar"] h1,
+            [data-testid="stSidebar"] h2,
+            [data-testid="stSidebar"] h3,
+            [data-testid="stSidebar"] h4 {
+                color: #0f172a !important;
+            }
+
             .stButton > button {
                 background: linear-gradient(90deg, #f97316 0%, #fb923c 100%);
                 color: #ffffff;
+            }
+
+            .stTextInput input,
+            .stTextArea textarea,
+            [data-baseweb="input"] input,
+            [data-baseweb="select"] div {
+                color: #111827 !important;
+            }
+
+            .stCaption,
+            [data-testid="stMarkdownContainer"] small {
+                color: #334155 !important;
             }
 
             .game-card,
             [data-testid="stMetric"] {
                 background: #ffffff;
                 border: 1px solid #d9e1ec;
-                color: #111827;
+                color: #111827 !important;
             }
         </style>
         """
