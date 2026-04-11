@@ -72,26 +72,32 @@ try:
         # --- Genre Pie Chart ---
         st.markdown("### 🧩 Genre Distribution")
         genre_counts = pd.Series([g for genres in df["Genres"] for g in genres]).value_counts()
-        fig2, ax2 = plt.subplots(facecolor=bg_color)
-        fig2.patch.set_facecolor(bg_color)
-        ax2.set_facecolor(bg_color)
+        if genre_counts.empty:
+            st.info("No genre data available for this selection.")
+        else:
+            fig2, ax2 = plt.subplots(facecolor=bg_color)
+            fig2.patch.set_facecolor(bg_color)
+            ax2.set_facecolor(bg_color)
 
-        ax2.pie(genre_counts, labels=genre_counts.index, autopct="%1.1f%%", startangle=140, textprops={'color': text_color})
-        ax2.axis("equal")
-        st.pyplot(fig2)
+            ax2.pie(genre_counts, labels=genre_counts.index, autopct="%1.1f%%", startangle=140, textprops={'color': text_color})
+            ax2.axis("equal")
+            st.pyplot(fig2)
 
         # --- Platform Usage ---
         st.markdown("### 🖥 Platform Popularity")
         platform_counts = pd.Series([p for platforms in df["Platforms"] for p in platforms]).value_counts()
-        fig3, ax3 = plt.subplots(facecolor=bg_color)
-        fig3.patch.set_facecolor(bg_color)
-        ax3.set_facecolor(bg_color)
+        if platform_counts.empty:
+            st.info("No platform data available for this selection.")
+        else:
+            fig3, ax3 = plt.subplots(facecolor=bg_color)
+            fig3.patch.set_facecolor(bg_color)
+            ax3.set_facecolor(bg_color)
 
-        ax3.bar(platform_counts.index, platform_counts.values, color="orange")
-        ax3.set_ylabel("Count", color=text_color)
-        ax3.tick_params(colors=text_color)
-        ax3.set_xticklabels(platform_counts.index, rotation=45, ha="right", color=text_color)
-        st.pyplot(fig3)
+            ax3.bar(platform_counts.index, platform_counts.values, color="orange")
+            ax3.set_ylabel("Count", color=text_color)
+            ax3.tick_params(axis="y", colors=text_color)
+            ax3.tick_params(axis="x", colors=text_color, rotation=45)
+            st.pyplot(fig3)
 
         # --- Game Cards ---
         st.markdown("### 🎯 Game Details")
