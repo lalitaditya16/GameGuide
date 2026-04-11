@@ -72,8 +72,12 @@ class RAWGClient:
                 "name": game.get("name"),
                 "rating": game.get("rating"),
                 "released": game.get("released"),
-                "platforms": [p["platform"]["name"] for p in game.get("platforms", []) if p.get("platform")],
-                "genres": [g["name"] for g in game.get("genres", [])],
+                "platforms": [
+                    p["platform"].get("name")
+                    for p in (game.get("platforms") or [])
+                    if p and p.get("platform") and p["platform"].get("name")
+                ],
+                "genres": [g.get("name") for g in (game.get("genres") or []) if g and g.get("name")],
                 "background_image": game.get("background_image"),
             }
             for game in games

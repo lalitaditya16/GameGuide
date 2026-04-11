@@ -1,8 +1,10 @@
 import streamlit as st
 from rawg_client import RAWGClient
+from helpers import init_session_state, add_to_favorites, remove_from_favorites, is_favorite
 
 st.set_page_config(page_title="Advanced Game Search", layout="wide")
 st.title("🔍 Advanced Game Search")
+init_session_state()
 
 api_key = st.secrets["RAWG_API_KEY"]
 client = RAWGClient(api_key)
@@ -16,13 +18,25 @@ if game_name:
     if game:
         st.subheader(game['name'])
 
+        game_id = game.get("id")
+        if game_id and is_favorite(game_id):
+            if st.button("💔 Remove from Wishlist"):
+                remove_from_favorites(game_id)
+                st.rerun()
+        elif game_id:
+            if st.button("❤️ Add to Wishlist"):
+                add_to_favorites(game_id, game)
+                st.rerun()
+
         if game.get("background_image"):
             st.image(game["background_image"], use_column_width=True)
 
         st.markdown(f"**Released:** {game.get('released', 'N/A')}")
         st.markdown(f"**Rating:** {game.get('rating', 'N/A')} / 5 ({game.get('ratings_count', 0)} ratings)")
         st.markdown(f"**Genres:** {', '.join([genre['name'] for genre in game.get('genres', [])])}")
-        st.markdown(f"**Platforms:** {', '.join([platform['platform']['name'] for platform in game.get('platforms', [])])}")
+        st.markdown(
+            f"**Platforms:** {', '.join([platform['platform']['name'] for platform in (game.get('platforms') or []) if platform and platform.get('platform') and platform['platform'].get('name')]) or 'N/A'}"
+        )
 
         # Get full game details
         game_details = client.get_game_details(game['id'])
