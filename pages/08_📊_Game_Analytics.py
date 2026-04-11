@@ -34,15 +34,19 @@ try:
         ordering="-rating",
         year=selected_year,
         page_size=40
-    )
+    ) or []
 
     # Convert to DataFrame
     df = pd.DataFrame([{
         "Name": game.get("name"),
         "Rating": game.get("rating"),
         "Released": game.get("released"),
-        "Genres": [g["name"] for g in game.get("genres", [])],
-        "Platforms": [p["platform"]["name"] for p in game.get("platforms", []) if p.get("platform")],
+        "Genres": [g.get("name") for g in (game.get("genres") or []) if g and g.get("name")],
+        "Platforms": [
+            p["platform"].get("name")
+            for p in (game.get("platforms") or [])
+            if p and p.get("platform") and p["platform"].get("name")
+        ],
         "Image": game.get("background_image"),
     } for game in raw_data])
 
