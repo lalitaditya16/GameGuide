@@ -357,6 +357,79 @@ def add_to_favorites(game_id: int, game_data: Dict[str, Any]):
     else:
         show_message("Game is already in favorites!", "warning")
 
+
+def get_favorites() -> List[Dict[str, Any]]:
+    """Return current wishlist entries."""
+    return st.session_state.get(SESSION_KEYS['favorites'], [])
+
+
+def replace_favorites(favorites: List[Dict[str, Any]]) -> None:
+    """Replace all favorites and persist to disk."""
+    st.session_state[SESSION_KEYS['favorites']] = favorites
+    _save_favorites_to_disk(favorites)
+
+
+def update_favorite_note(game_id: int, note: str) -> bool:
+    """Update note for a single wishlist game."""
+    favorites = st.session_state.get(SESSION_KEYS['favorites'], [])
+    for fav in favorites:
+        if fav.get('id') == game_id:
+            fav['note'] = note.strip()
+            _save_favorites_to_disk(favorites)
+            return True
+    return False
+
+
+def export_favorites_json() -> str:
+    """Export favorites as JSON string."""
+    return json.dumps(st.session_state.get(SESSION_KEYS['favorites'], []), indent=2)
+
+
+def import_favorites_json(json_text: str, mode: str = "merge") -> Dict[str, int]:
+    """
+    Import favorites from JSON.
+
+    mode:
+    - merge: keep existing favorites and append new ids.
+    - replace: overwrite existing favorites.
+    """
+    data = json.loads(json_text)
+    if not isinstance(data, list):
+        raise ValueError("Imported data must be a JSON array.")
+
+    incoming = []
+    for item in data:
+        if not isinstance(item, dict) or item.get('id') is None:
+            continue
+        incoming.append({
+            'id': item.get('id'),
+            'name': item.get('name', 'Unknown'),
+            'image': item.get('image', ''),
+            'rating': item.get('rating', 0),
+            'added_at': item.get('added_at', datetime.now().isoformat()),
+            'note': item.get('note', ''),
+        })
+
+    if mode == "replace":
+        replace_favorites(incoming)
+        return {'imported': len(incoming), 'skipped': len(data) - len(incoming)}
+
+    existing = st.session_state.get(SESSION_KEYS['favorites'], [])
+    existing_ids = {fav.get('id') for fav in existing}
+    added = 0
+    skipped = len(data) - len(incoming)
+
+    for item in incoming:
+        if item['id'] in existing_ids:
+            skipped += 1
+            continue
+        existing.append(item)
+        existing_ids.add(item['id'])
+        added += 1
+
+    replace_favorites(existing)
+    return {'imported': added, 'skipped': skipped}
+
 def remove_from_favorites(game_id: int):
     """Remove a game from user favorites."""
     favorites = st.session_state[SESSION_KEYS['favorites']]
