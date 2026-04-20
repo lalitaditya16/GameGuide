@@ -8,8 +8,8 @@ init_session_state()
 load_custom_css()
 render_theme_toggle()
 
-api_key = st.secrets["RAWG_API_KEY"]
-client = RAWGClient(api_key)
+from config import config
+client = RAWGClient(config.rawg_api_key)
 
 game_name = st.text_input("Enter a game name")
 
@@ -31,7 +31,7 @@ if game_name:
                 st.rerun()
 
         if game.get("background_image"):
-            st.image(game["background_image"], use_column_width=True)
+            st.image(game["background_image"], use_container_width=True)
 
         st.markdown(f"**Released:** {game.get('released', 'N/A')}")
         st.markdown(f"**Rating:** {game.get('rating', 'N/A')} / 5 ({game.get('ratings_count', 0)} ratings)")
@@ -71,7 +71,7 @@ if game_name:
             for shot in screenshots:
                 url = shot.get("image")
                 if isinstance(url, str) and url.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
-                    st.image(url, use_column_width=True)
+                    st.image(url, use_container_width=True)
                 else:
                     st.warning(f"Skipped invalid image URL: {url}")
 

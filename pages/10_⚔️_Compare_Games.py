@@ -5,7 +5,8 @@ from helpers import init_session_state, add_to_favorites, remove_from_favorites,
 
 @st.cache_resource
 def get_client():
-    return RAWGClient(api_key=st.secrets["RAWG_API_KEY"])
+    from config import config
+    return RAWGClient(api_key=config.rawg_api_key)
 
 
 def safe_join(values):
@@ -45,7 +46,7 @@ def render_game_panel(game, col):
     with col:
         st.subheader(game["name"])
         if game.get("image"):
-            st.image(game["image"], use_column_width=True)
+            st.image(game["image"], use_container_width=True)
 
         st.write(f"⭐ Rating: {game.get('rating', 'N/A')} ({game.get('ratings_count', 0)} ratings)")
         st.write(f"🏆 Metacritic: {game.get('metacritic', 'N/A')}")

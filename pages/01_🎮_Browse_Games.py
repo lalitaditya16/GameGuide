@@ -14,7 +14,8 @@ load_custom_css()
 
 @st.cache_resource
 def get_client():
-    return RAWGClient(api_key=st.secrets["RAWG_API_KEY"])
+    from config import config
+    return RAWGClient(api_key=config.rawg_api_key)
 
 
 @st.cache_data(ttl=3600)

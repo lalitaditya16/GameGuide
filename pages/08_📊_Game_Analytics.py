@@ -6,8 +6,8 @@ from rawg_client import RAWGClient
 from helpers import init_session_state, load_custom_css, render_theme_toggle
 
 # --- Initialize API ---
-api_key = st.secrets["RAWG_API_KEY"]
-rawg_client = RAWGClient(api_key)
+from config import config
+rawg_client = RAWGClient(config.rawg_api_key)
 
 st.set_page_config(page_title="Game Analytics", layout="wide")
 init_session_state()

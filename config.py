@@ -6,30 +6,32 @@ import os
 from pydantic_settings import BaseSettings
 from pydantic import Field
 from dotenv import load_dotenv
-import streamlit as st
 
 load_dotenv()
 
 
 class AppConfig(BaseSettings):
     # RAWG API
-    rawg_api_key: str = Field(default_factory=lambda: st.secrets.get("RAWG_API_KEY", ""))
+    rawg_api_key: str = Field(default_factory=lambda: os.getenv("RAWG_API_KEY", ""))
     base_url: str = "https://api.rawg.io/api"
     user_agent: str = "GameGuide/2.0"
 
     # Groq API — llama-3.3-70b-versatile for smarter + faster responses
-    groq_api_key: str = Field(default_factory=lambda: st.secrets.get("GROQ_API_KEY", ""))
+    groq_api_key: str = Field(default_factory=lambda: os.getenv("GROQ_API_KEY", ""))
     groq_model: str = "llama-3.3-70b-versatile"
     groq_fast_model: str = "llama-3.1-8b-instant"
     groq_temperature: float = 0.1
     groq_max_tokens: int = 1024
 
     # IGDB API — free via Twitch Developer account
-    igdb_client_id: str = Field(default_factory=lambda: st.secrets.get("IGDB_CLIENT_ID", ""))
-    igdb_client_secret: str = Field(default_factory=lambda: st.secrets.get("IGDB_CLIENT_SECRET", ""))
+    igdb_client_id: str = Field(default_factory=lambda: os.getenv("IGDB_CLIENT_ID", ""))
+    igdb_client_secret: str = Field(default_factory=lambda: os.getenv("IGDB_CLIENT_SECRET", ""))
 
     # YouTube Data API v3 — free, 10 000 quota units/day
-    youtube_api_key: str = Field(default_factory=lambda: st.secrets.get("YOUTUBE_API_KEY", ""))
+    youtube_api_key: str = Field(default_factory=lambda: os.getenv("YOUTUBE_API_KEY", ""))
+
+    # Steam API
+    steam_api_key: str = Field(default_factory=lambda: os.getenv("STEAM_API_KEY", ""))
 
     # API settings
     api_timeout: int = 30

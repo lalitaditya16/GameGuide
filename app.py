@@ -17,7 +17,7 @@ st.set_page_config(
     page_title="GameGuide",
     page_icon="🎮",
     layout="wide",
-    initial_sidebar_bar="expanded",
+    initial_sidebar_state="expanded",
     menu_items={
         'Get Help': 'https://github.com/lalitaditya16/GameGuide',
         'Report a bug': 'https://github.com/lalitaditya16/GameGuide/issues',
@@ -203,7 +203,7 @@ st.markdown(
 try:
     @st.cache_data(ttl=3600)
     def fetch_trending():
-        return rawg_client.get_games(ordering="-added", page_size=18)
+        return rawg_client.search_games_browse(query="", ordering="-added", page_size=18)
 
     trending = fetch_trending()
 
