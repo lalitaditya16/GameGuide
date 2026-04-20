@@ -1,74 +1,62 @@
-# Core Streamlit and Web Framework
-streamlit==1.28.1
+# Core — needs 1.31+ for st.write_stream()
+streamlit>=1.31.0
 streamlit-option-menu==0.3.6
-requests
-# HTTP Requests and API Integration
+
+# HTTP
 requests==2.31.0
 httpx==0.25.0
 
-# Data Processing and Analysis
-# Pandas and numpy must be left unpinned (or very loosely pinned) for Python 3.13,
-# as older pins will force a failing build. Latest versions at time of writing have 3.13 wheels.
+# Data
 pandas
 numpy
 
-# Data Visualization
-plotly                   # Remove strict pin, let pip pick latest 3.13 wheel
+# Visualisation
+plotly
 matplotlib
 seaborn
 altair
 
-# Image Processing and Media
-Pillow                   # Leave unpinned; strict pins break on 3.13
+# Image / media
+Pillow
 opencv-python
 
-# Environment and Configuration Management
+# Config & env
 python-dotenv
-pydantic>=2.7.4          # Required for compatibility with latest langchain
-pydantic-settings        # Should pick a compatible version automatically
+pydantic>=2.7.4
+pydantic-settings
 
-# Caching and Performance
-diskcache                # Leave as is, available for 3.13
-# streamlit-cache -- REMOVE (does not exist)
+# Cache
+diskcache
 
-# Date and Time Processing
+# Date / text
 python-dateutil
 pytz
-
-# Text Processing and Utilities
 beautifulsoup4
 markdown
 
-# Progress Bars and UI Enhancements
+# UI extras
 stqdm
 streamlit-lottie
 streamlit-card
 
-# Session State Management
-# streamlit-session-state -- REMOVE, use built-in st.session_state
-
-# Logging and Monitoring
+# Logging
 loguru
 
-# AI & LangChain Integration with Groq
-langchain>=0.3.27        # Modern version, supports pydantic>=2.7.4
-langchain-groq
+# AI — Groq (llama-3.3-70b-versatile) with streaming
 groq
+langchain>=0.3.27
+langchain-groq
+langchain-core
 
-# Testing (Optional, for development)
+# Dev / QA (optional)
 pytest
-# pytest-streamlit -- REMOVE (does not exist)
-
-# Code Quality (Optional, for development)
 black
 flake8
 isort
-
-# Type Checking (Optional)
 mypy
 types-requests
 
-# Additional Utilities
+# Misc
 click
 tqdm
 urllib3

@@ -1,10 +1,5 @@
-
 """
-Helper functions for the RAWG Streamlit Application with Groq AI Integration
-==========================================================================
-
-This module contains utility functions for session state management, 
-CSS loading, AI chat functionality using Groq, and other helper functions.
+GameGuide helpers — session state, profiles, favorites, AI chat (with streaming).
 """
 
 import streamlit as st
@@ -19,17 +14,20 @@ import logging
 from datetime import datetime
 import re
 
-# Import configurations
 from config import config, SESSION_KEYS, ERROR_MESSAGES, SUCCESS_MESSAGES, AI_PROMPTS, CUSTOM_CSS
 
-# Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
+DATA_DIR       = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 FAVORITES_FILE = os.path.join(DATA_DIR, "favorites.json")
-PROFILES_FILE = os.path.join(DATA_DIR, "profiles.json")
+PROFILES_FILE  = os.path.join(DATA_DIR, "profiles.json")
 DEFAULT_PROFILE_NAME = "Player1"
 
+
+# ---------------------------------------------------------------------------
+# Profile helpers
+# ---------------------------------------------------------------------------
 
 def _default_preferences() -> Dict[str, Any]:
     return {
@@ -44,15 +42,14 @@ def _default_preferences() -> Dict[str, Any]:
 def _default_profile(name: str) -> Dict[str, Any]:
     return {
         'display_name': name,
-        'created_at': datetime.now().isoformat(),
-        'preferences': _default_preferences(),
-        'wishlist': [],
+        'created_at':   datetime.now().isoformat(),
+        'preferences':  _default_preferences(),
+        'wishlist':     [],
         'played_games': [],
     }
 
 
 def _load_favorites_from_disk() -> List[Dict[str, Any]]:
-    """Load favorites from local storage if available."""
     try:
         if not os.path.exists(FAVORITES_FILE):
             return []
@@ -66,7 +63,6 @@ def _load_favorites_from_disk() -> List[Dict[str, Any]]:
 
 
 def _save_favorites_to_disk(favorites: List[Dict[str, Any]]) -> None:
-    """Persist favorites to local storage."""
     try:
         os.makedirs(DATA_DIR, exist_ok=True)
         with open(FAVORITES_FILE, "w", encoding="utf-8") as f:
@@ -76,7 +72,6 @@ def _save_favorites_to_disk(favorites: List[Dict[str, Any]]) -> None:
 
 
 def _load_profiles_from_disk() -> Dict[str, Any]:
-    """Load profile store from disk with migration from legacy favorites file."""
     store = {'active_profile': DEFAULT_PROFILE_NAME, 'profiles': {}}
     try:
         if os.path.exists(PROFILES_FILE):
@@ -111,12 +106,10 @@ def _load_profiles_from_disk() -> Dict[str, Any]:
 
 
 def _save_profiles_to_disk(store: Dict[str, Any]) -> None:
-    """Persist profile store and mirror active wishlist for backward compatibility."""
     try:
         os.makedirs(DATA_DIR, exist_ok=True)
         with open(PROFILES_FILE, "w", encoding="utf-8") as f:
             json.dump(store, f, indent=2)
-
         active_profile = store['profiles'].get(store.get('active_profile'))
         if active_profile:
             _save_favorites_to_disk(active_profile.get('wishlist', []))
@@ -140,25 +133,20 @@ def _persist_profile_store() -> None:
 
 
 def get_profiles() -> List[str]:
-    """Return all profile names."""
     return sorted(_get_profile_store()['profiles'].keys())
 
 
 def get_active_profile_name() -> str:
-    """Return active profile name."""
     return _get_profile_store()['active_profile']
 
 
 def create_profile(name: str) -> bool:
-    """Create a new profile and set it active."""
     normalized = (name or "").strip()
     if not normalized:
         return False
-
     store = _get_profile_store()
     if normalized in store['profiles']:
         return False
-
     store['profiles'][normalized] = _default_profile(normalized)
     store['active_profile'] = normalized
     _persist_profile_store()
@@ -166,7 +154,6 @@ def create_profile(name: str) -> bool:
 
 
 def set_active_profile(name: str) -> bool:
-    """Switch active profile."""
     store = _get_profile_store()
     if name not in store['profiles']:
         return False
@@ -176,11 +163,9 @@ def set_active_profile(name: str) -> bool:
 
 
 def delete_profile(name: str) -> bool:
-    """Delete a profile if at least one remains."""
     store = _get_profile_store()
     if name not in store['profiles'] or len(store['profiles']) <= 1:
         return False
-
     del store['profiles'][name]
     if store['active_profile'] == name:
         store['active_profile'] = next(iter(store['profiles'].keys()))
@@ -189,12 +174,10 @@ def delete_profile(name: str) -> bool:
 
 
 def get_user_preferences() -> Dict[str, Any]:
-    """Get preferences for active profile."""
     return _get_active_profile_data().get('preferences', _default_preferences())
 
 
 def update_user_preferences(preferences: Dict[str, Any]) -> None:
-    """Update and persist active profile preferences."""
     profile = _get_active_profile_data()
     current = profile.get('preferences', _default_preferences())
     current.update(preferences)
@@ -203,210 +186,88 @@ def update_user_preferences(preferences: Dict[str, Any]) -> None:
     _persist_profile_store()
 
 
-def clean_description(text):
-    # Replace headings like "###Setting" or "### Characters" with bold text
-    cleaned = re.sub(r"###\s*(\w+)", r"**\1:**", text)
-    return cleaned
-def init_session_state():
-    """Initialize Streamlit session state variables."""
+def clean_description(text: str) -> str:
+    return re.sub(r"###\s*(\w+)", r"**\1:**", text)
 
+
+# ---------------------------------------------------------------------------
+# Session state
+# ---------------------------------------------------------------------------
+
+def init_session_state():
     store = _get_profile_store()
     active_profile = store['profiles'][store['active_profile']]
 
-    # Initialize favorites
     st.session_state[SESSION_KEYS['favorites']] = active_profile.get('wishlist', [])
 
-    # Initialize search history
     if SESSION_KEYS['search_history'] not in st.session_state:
         st.session_state[SESSION_KEYS['search_history']] = []
-
-    # Initialize current page
     if SESSION_KEYS['current_page'] not in st.session_state:
         st.session_state[SESSION_KEYS['current_page']] = 1
-
-    # Initialize filters
     if SESSION_KEYS['filters'] not in st.session_state:
         st.session_state[SESSION_KEYS['filters']] = {}
+    if SESSION_KEYS['game_status'] not in st.session_state:
+        st.session_state[SESSION_KEYS['game_status']] = {}
 
-    # Initialize user preferences
     st.session_state[SESSION_KEYS['user_preferences']] = active_profile.get('preferences', _default_preferences())
 
-    # Initialize chat history
     if SESSION_KEYS['chat_history'] not in st.session_state:
         st.session_state[SESSION_KEYS['chat_history']] = []
-
-    # Initialize AI context
     if SESSION_KEYS['ai_context'] not in st.session_state:
         st.session_state[SESSION_KEYS['ai_context']] = {}
 
+
+# ---------------------------------------------------------------------------
+# CSS
+# ---------------------------------------------------------------------------
+
 def load_custom_css():
-    """Load custom CSS styles."""
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-    st.markdown(_theme_override_css(get_theme_mode()), unsafe_allow_html=True)
 
 
 def get_theme_mode() -> str:
-    """Get current app theme mode from session state."""
-    prefs = get_user_preferences()
-    return prefs.get('theme', 'dark')
+    return get_user_preferences().get('theme', 'dark')
 
 
 def render_theme_toggle():
-    """Render a persistent dark/light mode toggle in the sidebar."""
     current_mode = get_theme_mode()
-    is_dark = st.sidebar.toggle("🌗 Dark Mode", value=current_mode == "dark", key="gg_theme_toggle")
+    is_dark = st.sidebar.toggle("🌗 Dark Mode", value=(current_mode == "dark"), key="gg_theme_toggle")
     new_mode = "dark" if is_dark else "light"
-
     if get_user_preferences().get('theme') != new_mode:
         update_user_preferences({'theme': new_mode})
         st.rerun()
 
 
-def _theme_override_css(theme_mode: str) -> str:
-    """Theme-specific CSS overrides for light/dark mode."""
-    if theme_mode == "light":
-        return """
-        <style>
-            [data-testid="stAppViewContainer"] {
-                background: #f8fafc;
-                color: #111827 !important;
-            }
-
-            [data-testid="stAppViewContainer"] h1,
-            [data-testid="stAppViewContainer"] h2,
-            [data-testid="stAppViewContainer"] h3,
-            [data-testid="stAppViewContainer"] h4,
-            [data-testid="stAppViewContainer"] h5,
-            [data-testid="stAppViewContainer"] p,
-            [data-testid="stAppViewContainer"] span,
-            [data-testid="stAppViewContainer"] label,
-            [data-testid="stAppViewContainer"] li,
-            [data-testid="stAppViewContainer"] div {
-                color: #111827 !important;
-            }
-
-            [data-testid="stSidebar"] {
-                background: #f1f5f9;
-                border-right: 1px solid #dbe3ee;
-            }
-
-            [data-testid="stSidebar"] *,
-            [data-testid="stSidebar"] p,
-            [data-testid="stSidebar"] span,
-            [data-testid="stSidebar"] label,
-            [data-testid="stSidebar"] h1,
-            [data-testid="stSidebar"] h2,
-            [data-testid="stSidebar"] h3,
-            [data-testid="stSidebar"] h4 {
-                color: #0f172a !important;
-            }
-
-            .stButton > button {
-                background: linear-gradient(90deg, #f97316 0%, #fb923c 100%);
-                color: #ffffff;
-            }
-
-            .stTextInput input,
-            .stTextArea textarea,
-            [data-baseweb="input"] input,
-            [data-baseweb="select"] div {
-                color: #111827 !important;
-            }
-
-            .stCaption,
-            [data-testid="stMarkdownContainer"] small {
-                color: #334155 !important;
-            }
-
-            .game-card,
-            [data-testid="stMetric"] {
-                background: #ffffff;
-                border: 1px solid #d9e1ec;
-                color: #111827 !important;
-            }
-        </style>
-        """
-
-    return """
-    <style>
-        [data-testid="stAppViewContainer"] {
-            background: #0e1117;
-            color: #e5e7eb;
-        }
-
-        [data-testid="stSidebar"] {
-            background: #111827;
-            border-right: 1px solid #2a3342;
-        }
-
-        [data-testid="stSidebar"] * {
-            color: #e5e7eb;
-        }
-
-        .stButton > button {
-            background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
-            color: #ffffff;
-        }
-
-        .game-card,
-        [data-testid="stMetric"] {
-            background: #111827;
-            border: 1px solid #2a3342;
-            color: #e5e7eb;
-        }
-
-        .ai-message {
-            background: #1f2937;
-            border-color: #374151;
-            color: #e5e7eb;
-        }
-
-        [data-baseweb="input"] > div,
-        [data-baseweb="select"] > div,
-        .stTextInput input,
-        .stTextArea textarea {
-            background: #1f2937 !important;
-            color: #e5e7eb !important;
-            border-color: #374151 !important;
-        }
-    </style>
-    """
+# ---------------------------------------------------------------------------
+# Environment validation
+# ---------------------------------------------------------------------------
 
 def validate_environment():
-    """Validate environment setup for the application."""
     issues = []
-
-    # Check RAWG API key
     if not config.rawg_api_key:
         issues.append("RAWG API key is missing")
-
-    # Check Groq API key for AI features
     if not config.groq_api_key:
-        issues.append("Groq API key is missing (AI features will be disabled)")
+        issues.append("Groq API key is missing (AI features disabled)")
 
     if issues:
         with st.sidebar:
-            st.warning("⚠️ Configuration Issues:")
+            st.warning("Configuration issues:")
             for issue in issues:
                 st.write(f"• {issue}")
 
-            if "RAWG API key is missing" in str(issues):
-                st.error("🔗 Get your RAWG API key: https://rawg.io/apidocs")
 
-            if "Groq API key is missing" in str(issues):
-                st.info("🤖 Get your Groq API key: https://console.groq.com/keys")
+# ---------------------------------------------------------------------------
+# AI Chat Manager — llama-3.3-70b-versatile with streaming
+# ---------------------------------------------------------------------------
 
 class GroqChatManager:
-    """Manages AI chat functionality using Groq with Gemma2-9B."""
-
     def __init__(self):
-        """Initialize the Groq chat manager."""
         self.groq_api_key = config.groq_api_key
-        self.model_name = config.groq_model
-        self.temperature = config.groq_temperature
-        self.max_tokens = config.groq_max_tokens
-        self.llm = None
-        self.chain = None
+        self.model_name   = config.groq_model
+        self.temperature  = config.groq_temperature
+        self.max_tokens   = config.groq_max_tokens
+        self.llm          = None
+        self.chain        = None
 
         if self.groq_api_key:
             try:
@@ -414,199 +275,128 @@ class GroqChatManager:
                     groq_api_key=self.groq_api_key,
                     model_name=self.model_name,
                     temperature=self.temperature,
-                    max_tokens=self.max_tokens
+                    max_tokens=self.max_tokens,
                 )
-
-                # Create the chat chain
                 prompt = ChatPromptTemplate.from_messages([
                     ("system", AI_PROMPTS['system_prompt']),
-                    ("human", "{input}")
+                    ("human",  "{input}"),
                 ])
-
                 self.chain = prompt | self.llm | StrOutputParser()
-                logger.info("Groq chat manager initialized successfully")
-
+                logger.info(f"Groq ready — {self.model_name}")
             except Exception as e:
-                logger.error(f"Failed to initialize Groq: {e}")
-                self.llm = None
-                self.chain = None
+                logger.error(f"Failed to init Groq: {e}")
 
     def is_available(self) -> bool:
-        """Check if AI chat is available."""
         return self.chain is not None
 
-    def get_response(self, user_input: str, context: Dict[str, Any] = None) -> str:
-        """
-        Get AI response for user input.
-
-        Args:
-            user_input (str): User's message
-            context (dict, optional): Additional context for the AI
-
-        Returns:
-            str: AI response
-        """
+    def get_response(self, user_input: str, context: Dict = None) -> str:
         if not self.is_available():
             return ERROR_MESSAGES['ai_not_available']
-
         try:
-            # Add context to the input if provided
-            enhanced_input = user_input
+            enhanced = user_input
             if context:
-                context_str = json.dumps(context, indent=2)
-                enhanced_input = f"Context: {context_str}\n\nUser Query: {user_input}"
+                enhanced = f"Context: {json.dumps(context)}\n\nUser: {user_input}"
+            return self.chain.invoke({"input": enhanced})
+        except Exception as e:
+            logger.error(f"AI response error: {e}")
+            return f"Sorry, ran into an error: {e}"
 
-            response = self.chain.invoke({"input": enhanced_input})
-            return response
+    def stream_response(self, user_input: str, context: Dict = None):
+        """Yields text tokens — use with st.write_stream()."""
+        if not self.groq_api_key:
+            yield ERROR_MESSAGES['ai_not_available']
+            return
+        try:
+            from groq import Groq
+            client = Groq(api_key=self.groq_api_key)
+
+            today = datetime.now().strftime("%B %d, %Y")
+            messages = [
+                {"role": "system", "content": AI_PROMPTS['system_prompt'].format(today=today)}
+            ]
+
+            if context:
+                messages.append({
+                    "role":    "system",
+                    "content": f"Game context: {json.dumps(context, indent=2)}",
+                })
+
+            for msg in st.session_state.get(SESSION_KEYS['chat_history'], [])[-8:]:
+                role = "user" if msg.get('role') == 'user' else "assistant"
+                messages.append({"role": role, "content": msg.get('content', '')})
+
+            messages.append({"role": "user", "content": user_input})
+
+            stream = client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                max_tokens=self.max_tokens,
+                temperature=self.temperature,
+                stream=True,
+            )
+            for chunk in stream:
+                delta = chunk.choices[0].delta.content
+                if delta:
+                    yield delta
 
         except Exception as e:
-            logger.error(f"Error getting AI response: {e}")
-            return f"Sorry, I encountered an error: {str(e)}"
+            yield f"Error: {e}"
 
-    def analyze_game(self, game_data: Dict[str, Any]) -> str:
-        """
-        Analyze a game using AI.
-
-        Args:
-            game_data (dict): Game data from RAWG API
-
-        Returns:
-            str: AI analysis of the game
-        """
+    def analyze_game(self, game_data: Dict) -> str:
         if not self.is_available():
             return ERROR_MESSAGES['ai_not_available']
-
         try:
             prompt = AI_PROMPTS['game_analysis'].format(game_data=json.dumps(game_data, indent=2))
             response = self.llm.invoke([HumanMessage(content=prompt)])
             return response.content
-
         except Exception as e:
-            logger.error(f"Error analyzing game: {e}")
-            return f"Sorry, I couldn't analyze this game: {str(e)}"
+            return f"Could not analyse game: {e}"
 
-    def get_recommendations(self, preferences: Dict[str, Any], games_data: List[Dict]) -> str:
-        """
-        Get game recommendations based on user preferences.
-
-        Args:
-            preferences (dict): User preferences
-            games_data (list): Available games data
-
-        Returns:
-            str: AI recommendations
-        """
+    def generate_guide(self, game_name: str) -> str:
         if not self.is_available():
             return ERROR_MESSAGES['ai_not_available']
+        try:
+            prompt = AI_PROMPTS['game_guide'].format(game_name=game_name)
+            response = self.llm.invoke([HumanMessage(content=prompt)])
+            return response.content
+        except Exception as e:
+            return f"Could not generate guide: {e}"
 
+    def get_recommendations(self, preferences: Dict, games_data: List[Dict]) -> str:
+        if not self.is_available():
+            return ERROR_MESSAGES['ai_not_available']
         try:
             prompt = AI_PROMPTS['recommendation'].format(
                 preferences=json.dumps(preferences, indent=2),
-                games_data=json.dumps(games_data[:10], indent=2)  # Limit to 10 games
+                games_data=json.dumps(games_data[:10], indent=2),
             )
             response = self.llm.invoke([HumanMessage(content=prompt)])
             return response.content
-
         except Exception as e:
-            logger.error(f"Error getting recommendations: {e}")
-            return f"Sorry, I couldn't generate recommendations: {str(e)}"
+            return f"Could not get recommendations: {e}"
 
-    def analyze_trends(self, trend_data: Dict[str, Any]) -> str:
-        """
-        Analyze gaming trends using AI.
-
-        Args:
-            trend_data (dict): Trend data to analyze
-
-        Returns:
-            str: AI analysis of trends
-        """
+    def analyze_trends(self, trend_data: Dict) -> str:
         if not self.is_available():
             return ERROR_MESSAGES['ai_not_available']
-
         try:
             prompt = AI_PROMPTS['trend_analysis'].format(trend_data=json.dumps(trend_data, indent=2))
             response = self.llm.invoke([HumanMessage(content=prompt)])
             return response.content
-
         except Exception as e:
-            logger.error(f"Error analyzing trends: {e}")
-            return f"Sorry, I couldn't analyze trends: {str(e)}"
+            return f"Could not analyse trends: {e}"
+
 
 def get_chat_manager() -> GroqChatManager:
-    """Get or create a cached chat manager instance."""
     if 'chat_manager' not in st.session_state:
         st.session_state.chat_manager = GroqChatManager()
     return st.session_state.chat_manager
 
-def display_chat_interface():
-    """Display the chat interface in Streamlit."""
-    chat_manager = get_chat_manager()
 
-    if not chat_manager.is_available():
-        st.error(ERROR_MESSAGES['ai_not_available'])
-        return
-
-    # Chat history
-    st.subheader("💬 Chat History")
-
-    # Display messages
-    for message in st.session_state[SESSION_KEYS['chat_history']]:
-        if message['role'] == 'user':
-            st.markdown(f"""
-            <div class="chat-message user-message">
-                <strong>You:</strong> {message['content']}
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-            <div class="chat-message ai-message">
-                <strong>🤖 AI:</strong> {message['content']}
-            </div>
-            """, unsafe_allow_html=True)
-
-    # Chat input
-    st.markdown("---")
-    user_input = st.text_input("Ask me anything about gaming:", key="chat_input")
-
-    col1, col2, col3 = st.columns([1, 1, 3])
-
-    with col1:
-        if st.button("Send", type="primary"):
-            if user_input:
-                # Add user message
-                st.session_state[SESSION_KEYS['chat_history']].append({
-                    'role': 'user',
-                    'content': user_input,
-                    'timestamp': datetime.now().isoformat()
-                })
-
-                # Get AI response
-                with st.spinner("🤖 Thinking..."):
-                    ai_response = chat_manager.get_response(user_input)
-
-                # Add AI response
-                st.session_state[SESSION_KEYS['chat_history']].append({
-                    'role': 'assistant',
-                    'content': ai_response,
-                    'timestamp': datetime.now().isoformat()
-                })
-
-                st.rerun()
-
-    with col2:
-        if st.button("Clear Chat"):
-            st.session_state[SESSION_KEYS['chat_history']] = []
-            st.rerun()
+# ---------------------------------------------------------------------------
+# Favorites / wishlist
+# ---------------------------------------------------------------------------
 
 def show_message(message: str, message_type: str = "info"):
-    """
-    Display a formatted message to the user.
-
-    Args:
-        message (str): Message to display
-        message_type (str): Type of message ('info', 'success', 'warning', 'error')
-    """
     if message_type == "success":
         st.success(message)
     elif message_type == "warning":
@@ -616,34 +406,31 @@ def show_message(message: str, message_type: str = "info"):
     else:
         st.info(message)
 
-def add_to_favorites(game_id: int, game_data: Dict[str, Any]):
-    """Add a game to user favorites."""
-    profile = _get_active_profile_data()
-    favorites = profile.get('wishlist', [])
 
-    if game_id not in [fav['id'] for fav in favorites]:
+def add_to_favorites(game_id: int, game_data: Dict):
+    profile   = _get_active_profile_data()
+    favorites = profile.get('wishlist', [])
+    if game_id not in [f['id'] for f in favorites]:
         favorites.append({
-            'id': game_id,
-            'name': game_data.get('name', 'Unknown'),
-            'image': game_data.get('background_image', ''),
-            'rating': game_data.get('rating', 0),
-            'added_at': datetime.now().isoformat()
+            'id':       game_id,
+            'name':     game_data.get('name', 'Unknown'),
+            'image':    game_data.get('background_image', ''),
+            'rating':   game_data.get('rating', 0),
+            'added_at': datetime.now().isoformat(),
         })
         profile['wishlist'] = favorites
         st.session_state[SESSION_KEYS['favorites']] = favorites
         _persist_profile_store()
         show_message(SUCCESS_MESSAGES['game_added_to_favorites'], "success")
     else:
-        show_message("Game is already in favorites!", "warning")
+        show_message("Already in your list.", "warning")
 
 
-def get_favorites() -> List[Dict[str, Any]]:
-    """Return current wishlist entries."""
+def get_favorites() -> List[Dict]:
     return _get_active_profile_data().get('wishlist', [])
 
 
-def replace_favorites(favorites: List[Dict[str, Any]]) -> None:
-    """Replace all favorites and persist to disk."""
+def replace_favorites(favorites: List[Dict]) -> None:
     profile = _get_active_profile_data()
     profile['wishlist'] = favorites
     st.session_state[SESSION_KEYS['favorites']] = favorites
@@ -651,7 +438,6 @@ def replace_favorites(favorites: List[Dict[str, Any]]) -> None:
 
 
 def update_favorite_note(game_id: int, note: str) -> bool:
-    """Update note for a single wishlist game."""
     favorites = get_favorites()
     for fav in favorites:
         if fav.get('id') == game_id:
@@ -662,186 +448,196 @@ def update_favorite_note(game_id: int, note: str) -> bool:
 
 
 def export_favorites_json() -> str:
-    """Export favorites as JSON string."""
     return json.dumps(get_favorites(), indent=2)
 
 
 def import_favorites_json(json_text: str, mode: str = "merge") -> Dict[str, int]:
-    """
-    Import favorites from JSON.
-
-    mode:
-    - merge: keep existing favorites and append new ids.
-    - replace: overwrite existing favorites.
-    """
     data = json.loads(json_text)
     if not isinstance(data, list):
         raise ValueError("Imported data must be a JSON array.")
-
-    incoming = []
-    for item in data:
-        if not isinstance(item, dict) or item.get('id') is None:
-            continue
-        incoming.append({
-            'id': item.get('id'),
-            'name': item.get('name', 'Unknown'),
-            'image': item.get('image', ''),
-            'rating': item.get('rating', 0),
+    incoming = [
+        {
+            'id':       item.get('id'),
+            'name':     item.get('name', 'Unknown'),
+            'image':    item.get('image', ''),
+            'rating':   item.get('rating', 0),
             'added_at': item.get('added_at', datetime.now().isoformat()),
-            'note': item.get('note', ''),
-        })
-
+            'note':     item.get('note', ''),
+        }
+        for item in data
+        if isinstance(item, dict) and item.get('id') is not None
+    ]
     if mode == "replace":
         replace_favorites(incoming)
         return {'imported': len(incoming), 'skipped': len(data) - len(incoming)}
-
-    existing = get_favorites()
-    existing_ids = {fav.get('id') for fav in existing}
-    added = 0
-    skipped = len(data) - len(incoming)
-
+    existing     = get_favorites()
+    existing_ids = {f.get('id') for f in existing}
+    added = skipped = 0
     for item in incoming:
         if item['id'] in existing_ids:
             skipped += 1
-            continue
-        existing.append(item)
-        existing_ids.add(item['id'])
-        added += 1
-
+        else:
+            existing.append(item)
+            existing_ids.add(item['id'])
+            added += 1
     replace_favorites(existing)
-    return {'imported': added, 'skipped': skipped}
+    return {'imported': added, 'skipped': skipped + (len(data) - len(incoming))}
+
 
 def remove_from_favorites(game_id: int):
-    """Remove a game from user favorites."""
-    favorites = get_favorites()
-    updated = [
-        fav for fav in favorites if fav['id'] != game_id
-    ]
-    replace_favorites(updated)
+    replace_favorites([f for f in get_favorites() if f['id'] != game_id])
     show_message(SUCCESS_MESSAGES['game_removed_from_favorites'], "success")
 
+
 def is_favorite(game_id: int) -> bool:
-    """Check if a game is in user favorites."""
-    favorites = get_favorites()
-    return game_id in [fav['id'] for fav in favorites]
+    return game_id in [f['id'] for f in get_favorites()]
 
 
-def get_played_games() -> List[Dict[str, Any]]:
-    """Return active profile played games."""
+# ---------------------------------------------------------------------------
+# Game status list (MAL-style)
+# ---------------------------------------------------------------------------
+
+def get_game_status(game_id: int) -> Optional[str]:
+    return st.session_state.get(SESSION_KEYS['game_status'], {}).get(game_id)
+
+
+def set_game_status(game_id: int, status: Optional[str]):
+    status_map = st.session_state.setdefault(SESSION_KEYS['game_status'], {})
+    if status and status != "-- None --":
+        status_map[game_id] = status
+    else:
+        status_map.pop(game_id, None)
+
+
+# ---------------------------------------------------------------------------
+# Played games
+# ---------------------------------------------------------------------------
+
+def get_played_games() -> List[Dict]:
     return _get_active_profile_data().get('played_games', [])
 
 
-def add_played_game(game_data: Dict[str, Any], hours_played: float = 0.0, user_rating: Optional[float] = None, note: str = ""):
-    """Add or update a played game entry for active profile."""
-    profile = _get_active_profile_data()
+def add_played_game(
+    game_data: Dict,
+    hours_played: float = 0.0,
+    user_rating: Optional[float] = None,
+    note: str = "",
+):
+    profile      = _get_active_profile_data()
     played_games = profile.get('played_games', [])
-    game_id = game_data.get('id')
+    game_id      = game_data.get('id')
     if not game_id:
         return False
-
     entry = {
-        'id': game_id,
-        'name': game_data.get('name', 'Unknown'),
-        'image': game_data.get('background_image', ''),
-        'released': game_data.get('released', 'N/A'),
-        'rawg_rating': game_data.get('rating', 0),
-        'hours_played': float(hours_played or 0.0),
-        'user_rating': user_rating,
-        'note': (note or '').strip(),
+        'id':             game_id,
+        'name':           game_data.get('name', 'Unknown'),
+        'image':          game_data.get('background_image', ''),
+        'released':       game_data.get('released', 'N/A'),
+        'rawg_rating':    game_data.get('rating', 0),
+        'hours_played':   float(hours_played or 0.0),
+        'user_rating':    user_rating,
+        'note':           (note or '').strip(),
         'last_played_at': datetime.now().isoformat(),
     }
-
     replaced = False
-    for index, item in enumerate(played_games):
+    for i, item in enumerate(played_games):
         if item.get('id') == game_id:
-            played_games[index] = entry
+            played_games[i] = entry
             replaced = True
             break
-
     if not replaced:
         played_games.append(entry)
-
-    # Remove from wishlist once logged as played.
-    profile['wishlist'] = [fav for fav in profile.get('wishlist', []) if fav.get('id') != game_id]
+    profile['wishlist']     = [f for f in profile.get('wishlist', []) if f.get('id') != game_id]
     profile['played_games'] = played_games
     st.session_state[SESSION_KEYS['favorites']] = profile['wishlist']
     _persist_profile_store()
     return True
 
 
-def remove_played_game(game_id: int) -> None:
-    """Remove a played game from active profile."""
+def remove_played_game(game_id: int):
     profile = _get_active_profile_data()
     profile['played_games'] = [g for g in profile.get('played_games', []) if g.get('id') != game_id]
     _persist_profile_store()
 
-def format_game_card(game: Dict[str, Any]) -> str:
-    """Format a game as an HTML card."""
-    genres = ', '.join([g['name'] for g in game.get('genres', [])][:3])
-    platforms = ', '.join([p['platform']['name'] for p in game.get('platforms', [])][:3])
 
-    return f"""
-    <div class="game-card">
-        <img src="{game.get('background_image', '')}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;">
-        <h4 style="margin: 0.5rem 0;">{game.get('name', 'Unknown')}</h4>
-        <p style="margin: 0; color: #666;">
-            ⭐ {game.get('rating', 'N/A')}/5 | 
-            📅 {game.get('released', 'TBA')}<br>
-            🎯 {genres}<br>
-            🎮 {platforms}
-        </p>
-    </div>
-    """
-
-def export_chat_history() -> str:
-    """Export chat history as JSON."""
-    chat_history = st.session_state[SESSION_KEYS['chat_history']]
-    return json.dumps(chat_history, indent=2)
-
-def get_ai_quick_actions() -> List[str]:
-    """Get list of quick action prompts for AI chat."""
-    return [
-        "Recommend some indie games",
-        "What are the trending games this year?",
-        "Best RPGs for beginners",
-        "Compare PlayStation vs Xbox",
-        "Upcoming game releases",
-        "Best co-op games",
-        "Gaming industry trends",
-        "Free-to-play game recommendations"
-    ]
-
-# Utility functions for data processing
-def safe_get(data: Dict, key: str, default: Any = None):
-    """Safely get a value from a dictionary."""
-    return data.get(key, default) if data else default
+# ---------------------------------------------------------------------------
+# Utility
+# ---------------------------------------------------------------------------
 
 def format_date(date_string: str) -> str:
-    """Format date string for display."""
     if not date_string:
         return "TBA"
-
     try:
-        date_obj = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
-        return date_obj.strftime("%B %d, %Y")
-    except:
+        return datetime.fromisoformat(date_string.replace('Z', '+00:00')).strftime("%B %d, %Y")
+    except Exception:
         return date_string
 
+
 def truncate_text(text: str, max_length: int = 100) -> str:
-    """Truncate text to specified length."""
-    if not text:
-        return ""
+    if not text or len(text) <= max_length:
+        return text or ""
+    return text[:max_length - 3] + "..."
 
-    if len(text) <= max_length:
-        return text
-
-    return text[:max_length-3] + "..."
 
 def format_number(number: int) -> str:
-    """Format number for display (e.g., 1234 -> 1.2K)."""
-    if number >= 1000000:
-        return f"{number/1000000:.1f}M"
-    elif number >= 1000:
-        return f"{number/1000:.1f}K"
-    else:
-        return str(number)
+    if number >= 1_000_000:
+        return f"{number/1_000_000:.1f}M"
+    if number >= 1_000:
+        return f"{number/1_000:.1f}K"
+    return str(number)
+
+
+def export_chat_history() -> str:
+    return json.dumps(st.session_state.get(SESSION_KEYS['chat_history'], []), indent=2)
+
+
+def get_ai_quick_actions() -> List[str]:
+    return [
+        "Recommend some indie games",
+        "Best RPGs for beginners",
+        "Trending games in 2025",
+        "Best co-op games to play with friends",
+        "Free-to-play games worth trying",
+        "Compare PlayStation vs Xbox exclusives",
+        "Hidden gem games",
+        "Best open world games",
+    ]
+
+
+def display_chat_interface():
+    chat_manager = get_chat_manager()
+    if not chat_manager.is_available():
+        st.error(ERROR_MESSAGES['ai_not_available'])
+        return
+
+    st.subheader("Chat History")
+    for message in st.session_state[SESSION_KEYS['chat_history']]:
+        if message['role'] == 'user':
+            st.markdown(
+                f'<div class="chat-bubble-user"><strong>You:</strong> {message["content"]}</div>',
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                f'<div class="chat-bubble-ai"><strong>AI:</strong> {message["content"]}</div>',
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("---")
+    user_input = st.text_input("Ask anything about gaming:", key="chat_input")
+    col1, col2 = st.columns([1, 5])
+    with col1:
+        if st.button("Send", type="primary") and user_input:
+            st.session_state[SESSION_KEYS['chat_history']].append(
+                {'role': 'user', 'content': user_input, 'timestamp': datetime.now().isoformat()}
+            )
+            with st.spinner("Thinking..."):
+                ai_response = chat_manager.get_response(user_input)
+            st.session_state[SESSION_KEYS['chat_history']].append(
+                {'role': 'assistant', 'content': ai_response, 'timestamp': datetime.now().isoformat()}
+            )
+            st.rerun()
+    with col2:
+        if st.button("Clear Chat"):
+            st.session_state[SESSION_KEYS['chat_history']] = []
+            st.rerun()

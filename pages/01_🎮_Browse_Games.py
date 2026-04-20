@@ -1,6 +1,15 @@
 import streamlit as st
 from rawg_client import RAWGClient
-from helpers import init_session_state, add_to_favorites, remove_from_favorites, is_favorite, load_custom_css, render_theme_toggle
+from helpers import (
+    init_session_state, load_custom_css, render_theme_toggle,
+    add_to_favorites, remove_from_favorites, is_favorite,
+    get_game_status, set_game_status,
+)
+from config import GAME_STATUS_OPTIONS
+
+st.set_page_config(page_title="Browse Games — GameGuide", page_icon="🎮", layout="wide")
+init_session_state()
+load_custom_css()
 
 
 @st.cache_resource
@@ -13,106 +22,109 @@ def get_genres_and_platforms(_client):
     return _client.get_genres(), _client.get_platforms()
 
 
-def parse_year(released_value):
-    if not released_value or not isinstance(released_value, str):
+def parse_year(val):
+    if not isinstance(val, str):
         return None
     try:
-        return int(released_value[:4])
+        return int(val[:4])
     except (TypeError, ValueError):
         return None
 
 
-# Initialize
-st.set_page_config(page_title="🎮 Browse Games", page_icon="🎮", layout="wide")
-init_session_state()
-load_custom_css()
-render_theme_toggle()
 rawg = get_client()
 genres, platforms = get_genres_and_platforms(rawg)
 
-st.title("🎮 Browse Games")
-st.markdown("Discover games with advanced filters, saved presets, and wishlist actions.")
-
-if "browse_presets" not in st.session_state:
-    st.session_state.browse_presets = {}
-
-# Sidebar - Search options
-search_query = st.sidebar.text_input("🔍 Search Games", "")
-
-selected_genre = st.sidebar.selectbox(
-    "🎭 Filter by Genre",
-    options=["All"] + [genre["name"] for genre in genres],
-)
-
-selected_platform = st.sidebar.selectbox(
-    "🎮 Filter by Platform",
-    options=["All"] + [platform["name"] for platform in platforms],
-)
-
-min_rating = st.sidebar.slider("⭐ Minimum Rating", 0.0, 5.0, 0.0, 0.1)
-released_after = st.sidebar.number_input("📅 Released After (Year)", min_value=1980, max_value=2100, value=2000)
-
-sort_mapping = {
-    "Most Added": "-added",
-    "Highest Rated": "-rating",
-    "Newest": "-released",
-    "Name (A-Z)": "name",
-}
-sort_label = st.sidebar.selectbox("↕️ Sort by", options=list(sort_mapping.keys()))
-sort_option = sort_mapping[sort_label]
-
-st.sidebar.markdown("---")
-st.sidebar.subheader("💾 Saved Filter Presets")
-preset_name = st.sidebar.text_input("Preset Name", "")
-if st.sidebar.button("Save Current Preset"):
-    if preset_name.strip():
-        st.session_state.browse_presets[preset_name.strip()] = {
-            "search_query": search_query,
-            "selected_genre": selected_genre,
-            "selected_platform": selected_platform,
-            "min_rating": min_rating,
-            "released_after": int(released_after),
-            "sort_label": sort_label,
-        }
-        st.sidebar.success(f"Saved preset: {preset_name.strip()}")
-    else:
-        st.sidebar.warning("Enter a preset name before saving.")
-
-preset_options = ["None"] + sorted(st.session_state.browse_presets.keys())
-selected_preset = st.sidebar.selectbox("Load Preset", preset_options)
-if selected_preset != "None":
-    preset = st.session_state.browse_presets[selected_preset]
-    st.sidebar.caption(
-        f"{preset['selected_genre']} | {preset['selected_platform']} | "
-        f"min {preset['min_rating']}⭐ | after {preset['released_after']}"
+# ---------------------------------------------------------------------------
+# Sidebar filters
+# ---------------------------------------------------------------------------
+with st.sidebar:
+    render_theme_toggle()
+    st.markdown("---")
+    st.markdown(
+        '<p style="font-family:Orbitron,monospace; font-size:0.8rem; color:#a78bfa;">FILTERS</p>',
+        unsafe_allow_html=True,
     )
 
-if st.sidebar.button("Delete Selected Preset") and selected_preset != "None":
-    del st.session_state.browse_presets[selected_preset]
-    st.sidebar.success(f"Deleted preset: {selected_preset}")
-    st.rerun()
+    search_query = st.text_input("🔍 Search", "")
 
-# Apply selected preset if user chooses to load
-if st.sidebar.button("Apply Selected Preset") and selected_preset != "None":
-    preset = st.session_state.browse_presets[selected_preset]
-    search_query = preset["search_query"]
-    selected_genre = preset["selected_genre"]
-    selected_platform = preset["selected_platform"]
-    min_rating = preset["min_rating"]
-    released_after = preset["released_after"]
-    sort_label = preset["sort_label"]
-    sort_option = sort_mapping[sort_label]
+    selected_genre = st.selectbox(
+        "🎭 Genre",
+        options=["All"] + [g["name"] for g in genres],
+    )
+    selected_platform = st.selectbox(
+        "🖥️ Platform",
+        options=["All"] + [p["name"] for p in platforms],
+    )
 
-genre_slug = (
-    next((g["slug"] for g in genres if g["name"] == selected_genre), None)
-    if selected_genre != "All"
-    else None
-)
-platform_id = (
-    next((p["id"] for p in platforms if p["name"] == selected_platform), None)
-    if selected_platform != "All"
-    else None
-)
+    min_rating   = st.slider("⭐ Min Rating", 0.0, 5.0, 0.0, 0.1)
+    released_after = st.number_input("📅 Released After", min_value=1980, max_value=2100, value=2000)
+
+    sort_map = {
+        "Most Popular": "-added",
+        "Highest Rated": "-rating",
+        "Newest": "-released",
+        "Name (A-Z)": "name",
+        "Metacritic": "-metacritic",
+    }
+    sort_label  = st.selectbox("↕️ Sort by", list(sort_map.keys()))
+    sort_option = sort_map[sort_label]
+
+    st.markdown("---")
+    st.markdown(
+        '<p style="font-family:Orbitron,monospace; font-size:0.8rem; color:#a78bfa;">PRESETS</p>',
+        unsafe_allow_html=True,
+    )
+    if "browse_presets" not in st.session_state:
+        st.session_state.browse_presets = {}
+
+    preset_name = st.text_input("Preset name", "")
+    if st.button("💾 Save Preset") and preset_name.strip():
+        st.session_state.browse_presets[preset_name.strip()] = {
+            "search_query": search_query, "selected_genre": selected_genre,
+            "selected_platform": selected_platform, "min_rating": min_rating,
+            "released_after": int(released_after), "sort_label": sort_label,
+        }
+        st.sidebar.success(f"Saved: {preset_name.strip()}")
+
+    preset_opts = ["None"] + sorted(st.session_state.browse_presets.keys())
+    selected_preset = st.selectbox("Load Preset", preset_opts)
+
+    if st.button("▶ Apply Preset") and selected_preset != "None":
+        p = st.session_state.browse_presets[selected_preset]
+        search_query    = p["search_query"]
+        selected_genre  = p["selected_genre"]
+        selected_platform = p["selected_platform"]
+        min_rating      = p["min_rating"]
+        released_after  = p["released_after"]
+        sort_label      = p["sort_label"]
+        sort_option     = sort_map[sort_label]
+
+    if st.button("🗑️ Delete Preset") and selected_preset != "None":
+        del st.session_state.browse_presets[selected_preset]
+        st.rerun()
+
+# ---------------------------------------------------------------------------
+# Header
+# ---------------------------------------------------------------------------
+st.markdown("""
+<div style="margin-bottom:1.5rem;">
+  <h1 style="font-family:Orbitron,monospace; font-size:1.6rem; margin:0;
+             background:linear-gradient(135deg,#7c3aed,#06b6d4);
+             -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+             background-clip:text;">
+    🎮 BROWSE GAMES
+  </h1>
+  <p style="color:#64748b; font-size:0.85rem; margin-top:0.3rem;">
+    Discover games and track your list — MAL style
+  </p>
+</div>
+""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------------------------
+# Fetch & filter
+# ---------------------------------------------------------------------------
+genre_slug  = next((g["slug"] for g in genres if g["name"] == selected_genre), None) if selected_genre != "All" else None
+platform_id = next((p["id"]   for p in platforms if p["name"] == selected_platform), None) if selected_platform != "All" else None
 
 games = rawg.search_games_browse(
     query=search_query,
@@ -122,43 +134,106 @@ games = rawg.search_games_browse(
     page_size=40,
 )
 
-# Client-side filtering for score and release year
-filtered_games = []
-for game in games:
-    rating = game.get("rating") or 0
-    game_year = parse_year(game.get("released"))
-    if rating >= min_rating and (game_year is None or game_year >= int(released_after)):
-        filtered_games.append(game)
+filtered = [
+    g for g in games
+    if (g.get("rating") or 0) >= min_rating
+    and (parse_year(g.get("released")) or 9999) >= int(released_after)
+]
 
-col_a, col_b = st.columns(2)
-with col_a:
-    st.metric("Results", len(filtered_games))
-with col_b:
-    st.metric("Wishlist Items", len(st.session_state.get("user_favorites", [])))
+# Stats row
+mc1, mc2, mc3 = st.columns(3)
+mc1.metric("Results", len(filtered))
+mc2.metric("Your List", sum(1 for g in filtered if is_favorite(g.get("id", 0))))
+mc3.metric("Tracked", len(st.session_state.get("game_status_list", {})))
 
-if not filtered_games:
-    st.warning("No games found for current filters.")
+st.markdown('<hr class="neon-divider">', unsafe_allow_html=True)
+
+# ---------------------------------------------------------------------------
+# Game grid
+# ---------------------------------------------------------------------------
+STATUS_CHOICES = ["-- None --"] + list(GAME_STATUS_OPTIONS.keys())
+
+if not filtered:
+    st.markdown("""
+    <div style="text-align:center; padding:3rem; color:#475569;">
+        <div style="font-size:3rem; margin-bottom:1rem;">🔍</div>
+        <p style="font-family:Orbitron,monospace; font-size:0.9rem;">No games found</p>
+        <p style="font-size:0.8rem;">Try adjusting your filters</p>
+    </div>
+    """, unsafe_allow_html=True)
 else:
-    for game in filtered_games:
-        st.subheader(game.get("name", "Unknown"))
-        cols = st.columns([1, 3, 1])
-        with cols[0]:
-            if game.get("background_image"):
-                st.image(game["background_image"], width=140)
-        with cols[1]:
-            st.write(f"**Released:** {game.get('released', 'N/A')}")
-            st.write(f"**Rating:** {game.get('rating', 'N/A')} / 5 ⭐")
-            st.write(
-                f"**Genres:** {', '.join([genre.get('name', '') for genre in game.get('genres', []) if genre.get('name')]) or 'N/A'}"
-            )
-        with cols[2]:
-            game_id = game.get("id")
-            if game_id and is_favorite(game_id):
-                if st.button("Remove", key=f"remove_{game_id}"):
-                    remove_from_favorites(game_id)
-                    st.rerun()
-            elif game_id:
-                if st.button("Wishlist", key=f"wishlist_{game_id}"):
-                    add_to_favorites(game_id, game)
-                    st.rerun()
-        st.markdown("---")
+    COLS = 4
+    for row_start in range(0, len(filtered), COLS):
+        row_games = filtered[row_start : row_start + COLS]
+        cols = st.columns(COLS)
+
+        for col, game in zip(cols, row_games):
+            with col:
+                game_id = game.get("id")
+                name    = game.get("name", "Unknown")
+                img     = game.get("background_image") or "https://via.placeholder.com/300x175/0d0f1a/7c3aed?text=No+Image"
+                rating  = game.get("rating", 0)
+                released = game.get("released", "TBA")
+                genres_list = [gn.get("name","") for gn in game.get("genres", [])][:2]
+                platforms_list = [p.get("platform", {}).get("name","") for p in game.get("platforms", [])][:2]
+
+                genre_tags = "".join(f'<span class="genre-tag">{g}</span>' for g in genres_list)
+                platform_str = " · ".join(platforms_list) or "—"
+
+                current_status = get_game_status(game_id) if game_id else None
+                status_html = ""
+                if current_status and current_status in GAME_STATUS_OPTIONS:
+                    info = GAME_STATUS_OPTIONS[current_status]
+                    css_class = {
+                        'Playing': 'status-playing',
+                        'Completed': 'status-completed',
+                        'Want to Play': 'status-want',
+                        'On Hold': 'status-hold',
+                        'Dropped': 'status-dropped',
+                    }.get(current_status, '')
+                    status_html = f'<span class="{css_class}">{info["icon"]} {current_status}</span>'
+
+                st.markdown(f"""
+                <div class="game-card-new">
+                  <img class="game-card-img" src="{img}"
+                       onerror="this.src='https://via.placeholder.com/300x175/0d0f1a/7c3aed?text=No+Image'"
+                       loading="lazy" alt="{name}">
+                  <div class="game-card-body">
+                    <p class="game-card-title" title="{name}">{name}</p>
+                    <div style="margin-bottom:0.35rem;">
+                      <span class="rating-badge">⭐ {rating}/5</span>
+                      &nbsp;
+                      <span style="font-size:0.66rem; color:#64748b;">📅 {released}</span>
+                    </div>
+                    <div style="margin-bottom:0.3rem;">{genre_tags}</div>
+                    <p class="game-card-meta">🖥️ {platform_str}</p>
+                    {f'<div style="margin-top:0.3rem;">{status_html}</div>' if status_html else ''}
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                if game_id:
+                    # Status selector
+                    idx = STATUS_CHOICES.index(current_status) if current_status in STATUS_CHOICES else 0
+                    new_status = st.selectbox(
+                        "List status",
+                        STATUS_CHOICES,
+                        index=idx,
+                        key=f"status_{game_id}",
+                        label_visibility="collapsed",
+                    )
+                    if new_status != current_status:
+                        set_game_status(game_id, new_status)
+                        st.rerun()
+
+                    # Wishlist toggle
+                    if is_favorite(game_id):
+                        if st.button("❤️ Remove", key=f"rem_{game_id}", use_container_width=True):
+                            remove_from_favorites(game_id)
+                            st.rerun()
+                    else:
+                        if st.button("🤍 Wishlist", key=f"add_{game_id}", use_container_width=True):
+                            add_to_favorites(game_id, game)
+                            st.rerun()
+
+                st.markdown("<div style='margin-bottom:0.5rem;'></div>", unsafe_allow_html=True)

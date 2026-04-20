@@ -1,191 +1,308 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import streamlit as st
-from streamlit_option_menu import option_menu
-import pandas as pd 
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
+from datetime import datetime
 from rawg_client import RAWGClient
 from helpers import init_session_state, load_custom_css, validate_environment, get_chat_manager, render_theme_toggle
 from steam_client import SteamClient
-import requests
 
+load_dotenv()
 steam_client = SteamClient()
 
-# Load environment variables
-load_dotenv()
-today = datetime.now().strftime("%B %d, %Y")
-
-# Page configuration
 st.set_page_config(
-    page_title="🎮 GameGuide",
+    page_title="GameGuide",
     page_icon="🎮",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_bar="expanded",
     menu_items={
-        'Get Help': 'https://github.com/lalitaditya16/gameguide-streamlit-app',
-        'Report a bug': 'https://github.com/lalitaditya16/gameguide-streamlit-app/issues',
-        'About': """
-        # GAMEGUIDE powered by RAWG and STEAM
-        **Description**: A comprehensive web application for exploring video games with AI-powered features.
-        - 🎮 Browse  around 500,000+ games
-        - 🏢 Explore developers and publishers
-        - 📊 Interactive analytics and charts
-        - 🔍 Advanced search functionality
-        - 🤖 AI-powered gaming assistant 
-        """
+        'Get Help': 'https://github.com/lalitaditya16/GameGuide',
+        'Report a bug': 'https://github.com/lalitaditya16/GameGuide/issues',
+        'About': "# GameGuide\nYour complete gaming companion powered by RAWG, Steam, and Groq AI.",
     }
 )
 
-# Initialize session state
 init_session_state()
 load_custom_css()
 validate_environment()
+
 
 @st.cache_resource
 def init_rawg_client():
     api_key = os.getenv('RAWG_API_KEY')
     if not api_key:
-        st.error("⚠️ RAWG API key not found! Please set your API key in the .env file.")
-        st.info("Get your free API key from: https://rawg.io/apidocs")
+        st.error("RAWG API key not found. Add it to your .env file.")
         st.stop()
     return RAWGClient(api_key)
 
+
 rawg_client = init_rawg_client()
 
-def safe_format_number(value):
-    """Return formatted number or 'N/A' if None."""
+
+def safe_fmt(value):
     if isinstance(value, (int, float)):
         return f"{value:,}"
     return "N/A"
 
-def main():
-    with st.sidebar:
-        render_theme_toggle()
-        st.markdown("---")
-        st.markdown("""
-        <div style='text-align: center; padding: 1rem;'>
-            <h1 style='font-size: 2.5rem; margin: 0;'>🎮</h1>
-            <h2 style='color: #FF6B6B; margin: 0;'>RAWG Explorer</h2>
-            <p style='color: #666; font-size: 0.9rem;'>Gaming Database</p>
+
+# ---------------------------------------------------------------------------
+# Sidebar
+# ---------------------------------------------------------------------------
+with st.sidebar:
+    render_theme_toggle()
+    st.markdown("---")
+    st.markdown("""
+    <div style='text-align:center; padding: 0.5rem 0 1rem;'>
+        <div style='font-size:2.8rem;'>🎮</div>
+        <div style='font-family:Orbitron,monospace; font-size:1.1rem; font-weight:700;
+                    background:linear-gradient(135deg,#7c3aed,#06b6d4);
+                    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+                    background-clip:text;'>
+            GAMEGUIDE
+        </div>
+        <div style='color:#64748b; font-size:0.75rem; margin-top:2px;'>Your Gaming Companion</div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("---")
+
+    chat_manager = get_chat_manager()
+    if chat_manager.is_available():
+        st.success("🤖 AI Online — llama-3.3-70b")
+    else:
+        st.warning("🤖 AI Offline — add GROQ_API_KEY")
+
+
+# ---------------------------------------------------------------------------
+# Particle animation canvas (background)
+# ---------------------------------------------------------------------------
+PARTICLE_HTML = """
+<style>
+  body { margin:0; background:transparent; overflow:hidden; }
+  canvas { display:block; width:100%; }
+</style>
+<canvas id="pc"></canvas>
+<script>
+  const c   = document.getElementById('pc');
+  const ctx = c.getContext('2d');
+  function resize() { c.width = window.innerWidth; c.height = 220; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const colors = ['#7c3aed','#06b6d4','#ec4899','#a78bfa','#67e8f9'];
+  const particles = Array.from({length: 90}, () => mkP());
+
+  function mkP() {
+    return {
+      x: Math.random() * c.width,
+      y: Math.random() * c.height,
+      size: Math.random() * 2.2 + 0.4,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: -Math.random() * 0.55 - 0.08,
+      opacity: Math.random() * 0.65 + 0.15,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    };
+  }
+
+  function resetP(p) {
+    p.x = Math.random() * c.width;
+    p.y = c.height + 4;
+    p.opacity = Math.random() * 0.65 + 0.15;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.opacity -= 0.0007;
+      if (p.y < -4 || p.opacity <= 0) resetP(p);
+      ctx.save();
+      ctx.globalAlpha = p.opacity;
+      ctx.shadowBlur  = 7;
+      ctx.shadowColor = p.color;
+      ctx.fillStyle   = p.color;
+      ctx.fillRect(p.x, p.y, p.size, p.size);
+      ctx.restore();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+</script>
+"""
+
+
+# ---------------------------------------------------------------------------
+# Hero section
+# ---------------------------------------------------------------------------
+components.html(PARTICLE_HTML, height=220)
+
+st.markdown("""
+<div class="hero-section">
+  <p class="glow-title">GAMEGUIDE</p>
+  <p class="hero-sub">
+    Discover, track, and explore 500,000+ games &nbsp;·&nbsp;
+    AI-powered guides &nbsp;·&nbsp; MAL-style lists
+  </p>
+  <div style="margin-top:1.2rem; display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+    <span class="rating-badge" style="font-size:0.78rem; padding:4px 14px;">🎮 RAWG Database</span>
+    <span class="rating-badge" style="font-size:0.78rem; padding:4px 14px; background:linear-gradient(135deg,#06b6d4,#10b981);">⚡ Groq AI</span>
+    <span class="rating-badge" style="font-size:0.78rem; padding:4px 14px; background:linear-gradient(135deg,#ec4899,#7c3aed);">🎯 Steam Live Data</span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+
+# ---------------------------------------------------------------------------
+# Stats row
+# ---------------------------------------------------------------------------
+c1, c2, c3, c4 = st.columns(4)
+c1.metric("🎮 Games", "500,000+", "Growing daily")
+c2.metric("📸 Screenshots", "2.1M+", "HD quality")
+c3.metric("🏢 Developers", "220,000+", "Worldwide")
+c4.metric("⚡ AI Speed", "2,000+ tok/s", "Streaming")
+
+st.markdown('<hr class="neon-divider">', unsafe_allow_html=True)
+
+# ---------------------------------------------------------------------------
+# Feature cards
+# ---------------------------------------------------------------------------
+st.markdown(
+    '<h2 style="font-family:Orbitron,monospace; font-size:1.1rem; color:#a78bfa; margin-bottom:1rem;">EXPLORE</h2>',
+    unsafe_allow_html=True,
+)
+
+fc1, fc2, fc3, fc4, fc5 = st.columns(5)
+features = [
+    ("🎮", "Browse Games", "500K+ games with filters, sorting & MAL-style status tracking"),
+    ("🤖", "AI Assistant", "Streaming chat with llama-3.3-70b — fast, smart, context-aware"),
+    ("📖", "Game Guides", "AI walkthroughs + YouTube video guides for any game"),
+    ("📊", "Analytics", "Trends, charts, and insights across the gaming world"),
+    ("🔍", "Advanced Search", "Filter by genre, platform, year, Metacritic score and more"),
+]
+for col, (icon, title, desc) in zip([fc1, fc2, fc3, fc4, fc5], features):
+    with col:
+        st.markdown(f"""
+        <div class="feature-card">
+          <span class="feature-icon">{icon}</span>
+          <p class="feature-title">{title}</p>
+          <p class="feature-desc">{desc}</p>
         </div>
         """, unsafe_allow_html=True)
-        st.markdown("---")
 
-        chat_manager = get_chat_manager()
-        if chat_manager.is_available():
-            st.success("🤖 AI Assistant: Online")
-            st.markdown("*Powered by Groq + Gemma2-9B*")
+st.markdown('<hr class="neon-divider">', unsafe_allow_html=True)
+
+# ---------------------------------------------------------------------------
+# Trending games carousel (top-rated from RAWG)
+# ---------------------------------------------------------------------------
+st.markdown(
+    '<h2 style="font-family:Orbitron,monospace; font-size:1.1rem; color:#a78bfa; margin-bottom:0.8rem;">🔥 TRENDING NOW</h2>',
+    unsafe_allow_html=True,
+)
+
+try:
+    @st.cache_data(ttl=3600)
+    def fetch_trending():
+        return rawg_client.get_games(ordering="-added", page_size=18)
+
+    trending = fetch_trending()
+
+    if trending:
+        cards_html = ""
+        for game in trending:
+            img   = game.get('background_image') or 'https://via.placeholder.com/190x110/0d0f1a/7c3aed?text=No+Image'
+            name  = game.get('name', 'Unknown')[:28]
+            rating = game.get('rating', 0)
+            stars  = "⭐" * round(rating) if rating else "—"
+            cards_html += f"""
+            <div class="carousel-item">
+              <img src="{img}" alt="{name}" loading="lazy">
+              <div class="carousel-item-body">
+                <p class="carousel-item-title">{name}</p>
+                <span class="carousel-item-rating">{stars} {rating}/5</span>
+              </div>
+            </div>
+            """
+        st.markdown(
+            f'<div class="carousel-wrap">{cards_html}</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.info("Could not load trending games right now.")
+except Exception:
+    st.info("Trending games unavailable.")
+
+st.markdown('<hr class="neon-divider">', unsafe_allow_html=True)
+
+# ---------------------------------------------------------------------------
+# Most played on Steam
+# ---------------------------------------------------------------------------
+st.markdown(
+    '<h2 style="font-family:Orbitron,monospace; font-size:1.1rem; color:#a78bfa; margin-bottom:0.8rem;">🎯 MOST PLAYED ON STEAM</h2>',
+    unsafe_allow_html=True,
+)
+
+try:
+    col_free, col_paid = st.columns(2)
+
+    with col_free:
+        st.markdown(
+            '<p style="font-family:Orbitron,monospace; font-size:0.82rem; color:#34d399; margin-bottom:0.8rem;">🆓 FREE TO PLAY</p>',
+            unsafe_allow_html=True,
+        )
+        free_games = steam_client.get_most_played_games(limit=5, free_only=True)
+        if free_games:
+            for game in free_games:
+                appid = game.get("appid")
+                st.markdown(f"""
+                <div class="game-card-new" style="margin-bottom:0.8rem;">
+                  <img class="game-card-img"
+                       src="https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
+                       onerror="this.src='https://via.placeholder.com/300x175/0d0f1a/7c3aed?text=Steam'"
+                       loading="lazy">
+                  <div class="game-card-body">
+                    <p class="game-card-title">{game.get('name','Unknown')}</p>
+                    <p class="game-card-meta">👥 {safe_fmt(game.get('current_players'))} playing &nbsp;·&nbsp; 📈 Peak {safe_fmt(game.get('peak_players'))}</p>
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
         else:
-            st.warning("🤖 AI Assistant: Offline")
-            st.markdown("*Add GROQ_API_KEY to enable*")
+            st.info("No free games found.")
 
-    st.markdown("""
-    <div style='text-align: center; padding: 2rem 0;'>
-        <h1 style='color: #FF6B6B; font-size: 3rem; margin: 0;'>🎮 GAMEGUIDE</h1>
-        <p style='font-size: 1.2rem; color: #666;'>Discover, explore, and analyze and enjoy the world of video games</p>
-        <p style='font-size: 1rem; color: #888;'>✨ Powered with  an AI gaming assistant using Groq + Gemma2-9B along with the RAWG database and Steam database</p>
-    </div>
-    """, unsafe_allow_html=True)
+    with col_paid:
+        st.markdown(
+            '<p style="font-family:Orbitron,monospace; font-size:0.82rem; color:#a78bfa; margin-bottom:0.8rem;">💎 PREMIUM</p>',
+            unsafe_allow_html=True,
+        )
+        paid_games = steam_client.get_most_played_games(limit=5, free_only=False)
+        if paid_games:
+            for game in paid_games:
+                appid = game.get("appid")
+                st.markdown(f"""
+                <div class="game-card-new" style="margin-bottom:0.8rem;">
+                  <img class="game-card-img"
+                       src="https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
+                       onerror="this.src='https://via.placeholder.com/300x175/0d0f1a/7c3aed?text=Steam'"
+                       loading="lazy">
+                  <div class="game-card-body">
+                    <p class="game-card-title">{game.get('name','Unknown')}</p>
+                    <p class="game-card-meta">👥 {safe_fmt(game.get('current_players'))} playing &nbsp;·&nbsp; 📈 Peak {safe_fmt(game.get('peak_players'))}</p>
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info("No paid games found.")
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric(label="🎮 Total Games", value="500,000+", delta="Growing daily")
-    col2.metric(label="🖼️ Screenshots", value="2,100,000+", delta="High quality")
-    col3.metric(label="🏢 Developers", value="220,000+", delta="Worldwide")
-    col4.metric(label="🤖 AI Speed", value="800 tok/sec", delta="Rapid responses")
+except Exception as e:
+    st.error(f"Could not load Steam data: {e}")
 
-    st.markdown("---")
-    st.subheader("🌟 Featured Sections")
-     # Create feature cards
-    feature_col1, feature_col2, feature_col3, feature_col4 = st.columns(4)
-
-    with feature_col1:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🎮 Browse Games</h3>
-                <p style='margin: 0.5rem 0;'>Explore our vast collection of games with advanced search and filtering</p>
-            </div>
-            """, unsafe_allow_html=True)
-           
-
-    with feature_col2:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>📊 Analytics</h3>
-                <p style='margin: 0.5rem 0;'>Dive into gaming trends, statistics, and interactive visualizations</p>
-        </div>
-       """, unsafe_allow_html=True)
-
-
-    with feature_col3:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🔍 Advanced Search</h3>
-                <p style='margin: 0.5rem 0;'>Find exactly what you're looking for with powerful search tools</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            
-
-    with feature_col4:
-        with st.container():
-            st.markdown("""
-            <div style='padding: 1.5rem; border-radius: 10px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; text-align: center; margin-bottom: 1rem;'>
-                <h3 style='margin: 0; font-size: 1.5rem;'>🤖 AI Assistant</h3>
-                <p style='margin: 0.5rem 0;'>Chat with AI about games, get recommendations, and gaming insights</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-    # Featured cards (omitted here for brevity — same as yours)
-
-    st.markdown("---")
-
-    # 🔄 Updated Popular Games Section (Free & Paid)
-    try:
-        st.subheader("🔥 Most Played Games on Steam")
-        col_free, col_paid = st.columns(2)
-
-        with col_free:
-            st.markdown("### 🆓 Free to Play")
-            free_games = steam_client.get_most_played_games(limit=6, free_only=True)
-            if free_games:
-                for game in free_games:
-                    appid = game.get("appid")
-                    st.image(f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg", width=300)
-                    st.write(f"**{game.get('name')}**")
-                    st.caption(f"👥 {safe_format_number(game.get('current_players'))} | 📈 Peak: {safe_format_number(game.get('peak_players'))}")
-                    st.markdown("---")
-            else:
-                st.info("No free games found.")
-
-        with col_paid:
-            st.markdown("### 💰 Paid Games")
-            paid_games = steam_client.get_most_played_games(limit=6, free_only=False)
-            if paid_games:
-                for game in paid_games:
-                    appid = game.get("appid")
-                    st.image(f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg", width=300)
-                    st.write(f"**{game.get('name')}**")
-                    st.caption(f"👥 {safe_format_number(game.get('current_players'))} | 📈 Peak: {safe_format_number(game.get('peak_players'))}")
-                    st.markdown("---")
-            else:
-                st.info("No paid games found.")
-
-    except Exception as e:
-        st.error("Error loading Steam's most played games:")
-        st.exception(e)
-
-    st.markdown("---")
-    st.markdown("""
-    <div style='text-align: center; padding: 2rem 0; color: #666;'>
-        <p>Built with ❤️ using <a href='https://streamlit.io'>Streamlit</a>, <a href='https://rawg.io'>RAWG.io API</a>, and <a href='https://groq.com'>Groq AI</a></p>
-        <p>© GAMEGUIDE VERSION 2025</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    main()
+# ---------------------------------------------------------------------------
+# Footer
+# ---------------------------------------------------------------------------
+st.markdown('<hr class="neon-divider">', unsafe_allow_html=True)
+st.markdown("""
+<div style='text-align:center; color:#475569; font-size:0.78rem; padding:1rem 0 2rem;'>
+  Built with Streamlit &nbsp;·&nbsp; RAWG.io &nbsp;·&nbsp; Steam &nbsp;·&nbsp; Groq AI (llama-3.3-70b-versatile)<br>
+  <span style='color:#7c3aed;'>GAMEGUIDE</span> &nbsp;©&nbsp; 2025
+</div>
+""", unsafe_allow_html=True)
